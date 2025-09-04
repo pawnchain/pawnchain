@@ -123,24 +123,50 @@ export async function GET(request: NextRequest) {
     }))
     
     // Fetch triangle stats by plan
-    const trianglesByPlan = await prisma.triangle.groupBy({
-      by: ['planType', 'completedAt'],
-      _count: true
-    })
+    let activeTrianglesByPlan = [];
+    let completedTrianglesByPlan = [];
     
-    const activeTrianglesByPlan = trianglesByPlan
-      .filter(t => t.completedAt === null)
-      .map(t => ({
-        planType: t.planType,
-        count: t._count
-      }))
+    try {
+      // Fetch all triangles and manually group them
+      const allTriangles = await prisma.triangle.findMany({
+        select: {
+          planType: true,
+          completedAt: true
+        }
+      });
       
-    const completedTrianglesByPlan = trianglesByPlan
-      .filter(t => t.completedAt !== null)
-      .map(t => ({
-        planType: t.planType,
-        count: t._count
-      }))
+      // Group triangles manually
+      const trianglesByPlanMap = new Map();
+      
+      allTriangles.forEach(triangle => {
+        const key = `${triangle.planType}-${triangle.completedAt ? 'completed' : 'active'}`;
+        if (trianglesByPlanMap.has(key)) {
+          trianglesByPlanMap.set(key, trianglesByPlanMap.get(key) + 1);
+        } else {
+          trianglesByPlanMap.set(key, 1);
+        }
+      });
+      
+      // Convert map to arrays
+      activeTrianglesByPlan = Array.from(trianglesByPlanMap.entries())
+        .filter(([key]) => key.endsWith('-active'))
+        .map(([key, count]) => {
+          const planType = key.replace('-active', '');
+          return { planType, count };
+        });
+        
+      completedTrianglesByPlan = Array.from(trianglesByPlanMap.entries())
+        .filter(([key]) => key.endsWith('-completed'))
+        .map(([key, count]) => {
+          const planType = key.replace('-completed', '');
+          return { planType, count };
+        });
+    } catch (error) {
+      console.error('Error fetching triangle stats:', error);
+      // If there's an error, we'll return empty arrays for triangle stats
+      activeTrianglesByPlan = [];
+      completedTrianglesByPlan = [];
+    }
     
     return NextResponse.json({
       stats: {
@@ -156,7 +182,7 @@ export async function GET(request: NextRequest) {
         active: activeTrianglesByPlan,
         completed: completedTrianglesByPlan
       }
-    })
+    });
   } catch (error) {
     console.error('Error fetching admin overview:', error)
     return NextResponse.json(

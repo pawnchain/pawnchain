@@ -17,15 +17,17 @@ const AdminUsers: React.FC = () => {
         const res = await fetch('/api/admin/users')
         if (!res.ok) throw new Error('Failed to load users')
         const data = await res.json()
-        setUsers(data.map((u: any) => ({
+        // Fix: API returns array directly, not wrapped in an object
+        const usersData = Array.isArray(data) ? data : []
+        setUsers(usersData.map((u: any) => ({
           id: u.id,
           username: u.username,
           walletAddress: u.walletAddress,
-          plan: u.planType,
+          plan: u.planType || u.plan, // Handle both property names
           status: u.isAdmin ? 'admin' : (u.status === 'CONFIRMED' ? 'active' : 'pending'),
           joinedDate: u.createdAt,
           triangleId: u.triangleId || '-',
-          trianglePosition: u.positionKey || '-',
+          trianglePosition: u.positionKey || u.trianglePosition || '-',
           triangleComplete: u.triangleComplete || false,
           filledPositions: u.filledPositions || 0,
           balance: u.balance ? `${u.balance.toFixed(2)}` : '0.00',
@@ -38,6 +40,7 @@ const AdminUsers: React.FC = () => {
         })))
       } catch (e: any) {
         setError(e.message || 'Failed to load')
+        setUsers([]) // Ensure users is always an array
       } finally {
         setLoading(false)
       }

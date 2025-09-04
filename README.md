@@ -32,11 +32,15 @@ The system follows a **Next.js App Router-based full-stack architecture** with d
 - Socket.io 4.8.1
 
 ### Frontend
-- React 18.2.0
-- Vite
-- Tailwind CSS 4.x
-- Framer Motion
-- Lucide React icons
+- React 18.3.1
+- Next.js 15.1.0 (App Router)
+- Tailwind CSS 3.4.0
+- Framer Motion 11.0.0
+- Lucide React 0.344.0
+
+## Changelog
+
+For a detailed history of changes, please see [CHANGELOG.md](CHANGELOG.md).
 
 ## Getting Started
 
@@ -71,18 +75,20 @@ npm run create:admin
 ### Development
 
 ```bash
-# Start development servers
-npm run dev:all  # Runs both Next.js and Vite frontend
+# Start development server
+npm run dev
 ```
+
+*Note: The PRD references `npm run dev:all` for running dual frontend servers, but this script is not currently implemented in package.json.*
 
 ### Build
 
 ```bash
 # Build the application
-npm run build          # Build Next.js app
-npm run build:frontend # Build Vite frontend
-npm run build:all      # Build both
+npm run build
 ```
+
+*Note: The PRD references `build:frontend` and `build:all` scripts which are not currently implemented in package.json.*
 
 ## Deployment
 
@@ -97,7 +103,7 @@ npx vercel --prod
 ### Manual Deployment
 
 ```bash
-npm run build:all
+npm run build
 npx prisma generate
 npx prisma db push
 npm start
@@ -106,18 +112,16 @@ npm start
 ## Project Structure
 
 ```
-├── backend/           # Next.js application
+├── src/               # Main source code
 │   ├── app/           # App Router with pages and API routes
 │   ├── components/    # Shared UI components
+│   ├── contexts/      # React contexts
 │   ├── lib/           # Core business logic
-│   ├── prisma/        # Database schema and migrations
-│   └── scripts/       # Setup and maintenance scripts
-├── frontend/          # Standalone React/Vite application
-│   ├── src/           # Source code
-│   │   ├── components/ # React components
-│   │   ├── contexts/   # React contexts
-│   │   └── types/      # TypeScript definitions
-│   └── vite.config.ts  # Vite configuration
+│   └── types/         # TypeScript definitions
+├── prisma/            # Database schema and migrations
+├── scripts/           # Setup and maintenance scripts
+├── PRD.md             # Product Requirements Document
+├── TRIANGLE_ASSIGNMENT.md # Triangle assignment logic documentation
 └── README.md          # This file
 ```
 

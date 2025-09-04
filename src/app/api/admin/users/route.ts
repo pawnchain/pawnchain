@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     
     // Build where clause - exclude deleted users
     const where: any = {
-      deletedAt: null,
+      // Use a different approach for checking null values in MongoDB
       isAdmin: false // Exclude admin users from the list
     }
     
@@ -93,8 +93,11 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' }
     })
     
+    // Filter out deleted users manually (workaround for MongoDB null issue)
+    const nonDeletedUsers = users.filter(user => !user.deletedAt)
+    
     // Transform data for frontend
-    const formattedUsers = users.map(user => {
+    const formattedUsers = nonDeletedUsers.map(user => {
       const referralBonus = user.transactions
         .filter(tx => tx.type === 'REFERRAL_BONUS')
         .reduce((sum, tx) => sum + tx.amount, 0)

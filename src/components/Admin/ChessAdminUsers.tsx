@@ -36,7 +36,8 @@ const ChessAdminUsers: React.FC = () => {
         const response = await fetch('/api/admin/users')
         if (response.ok) {
           const data = await response.json()
-          setUsers(data.users)
+          // Fix: API returns array directly, not { users: [...] }
+          setUsers(Array.isArray(data) ? data : [])
         } else {
           const errorData = await response.json()
           setError(errorData.error || 'Failed to fetch users')
