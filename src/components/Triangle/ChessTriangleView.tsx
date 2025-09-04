@@ -336,7 +336,7 @@ const ChessTriangleView: React.FC = () => {
             <h3 className="text-2xl font-bold text-white mb-6 text-center">
               Battle Formation Diagram
             </h3>
-            <ChessTriangleVisualization triangleData={mockTriangleData} />
+            <ChessTriangleVisualization data={mockTriangleData} />
           </motion.div>
 
           {/* Tabs Navigation */}

@@ -10,6 +10,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model TrianglePosition {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  triangleId String   @db.ObjectId
+  userId     String?  @db.ObjectId
+  level      Int      // 1, 2, 3, 4
+  position   Int      // Position within level (0-based)
+  positionKey String  // A, AB1, AB2, B1C1, etc.
+  
+  triangle   Triangle @relation(fields: [triangleId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([triangleId, level, position])
+  // The business logic ensures each user only has one active position
+  @@map("triangle_positions")
+}
+
 model User {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   username      String   @unique
@@ -33,7 +52,7 @@ model User {
   deletedAt     DateTime?
 
   // Triangle relations
-  trianglePosition TrianglePosition?
+  trianglePosition TrianglePosition[] // Changed from single to array
   
   // Transaction relations
   transactions  Transaction[]
@@ -55,25 +74,6 @@ model Triangle {
   positions       TrianglePosition[]
 
   @@map("triangles")
-}
-
-model TrianglePosition {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  triangleId String   @db.ObjectId
-  userId     String?  @db.ObjectId
-  level      Int      // 1, 2, 3, 4
-  position   Int      // Position within level (0-based)
-  positionKey String  // A, AB1, AB2, B1C1, etc.
-  
-  triangle   Triangle @relation(fields: [triangleId], references: [id], onDelete: Cascade)
-  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@unique([triangleId, level, position])
-  @@unique([userId]) // Each user can only have one active position
-  @@map("triangle_positions")
 }
 
 model Transaction {

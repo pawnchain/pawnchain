@@ -50,22 +50,32 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data for frontend compatibility
-    const positions = Array(15).fill(null)
-    
-    triangleInfo.triangle.positions.forEach(pos => {
-      const index = (pos.level - 1) * (pos.level === 1 ? 1 : pos.level === 2 ? 2 : pos.level === 3 ? 4 : 8) + pos.position
+    // First ensure positions are properly ordered
+    const orderedPositions = triangleInfo.triangle.positions
+      .slice()
+      .sort((a, b) => {
+        // Sort by level first, then by position within level
+        if (a.level !== b.level) {
+          return a.level - b.level;
+        }
+        return a.position - b.position;
+      });
+
+    // Create positions array with correct ordering
+    const positions = orderedPositions.map(pos => {
       if (pos.user) {
-        positions[index] = {
+        return {
           id: pos.user.id,
           username: pos.user.username,
           plan: pos.user.plan
-        }
+        };
       }
-    })
+      return null;
+    });
 
-    const currentUserPosition = triangleInfo.triangle.positions.findIndex(pos => 
+    const currentUserPosition = orderedPositions.findIndex(pos => 
       pos.userId === user.id
-    )
+    );
 
     return NextResponse.json({
       completion: triangleInfo.completion,

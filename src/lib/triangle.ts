@@ -69,17 +69,25 @@ export async function assignUserToTriangle(userId: string, referrerId?: string) 
   if (referrerId || user.uplineId) {
     const referrer = await prisma.user.findUnique({
       where: { id: referrerId || user.uplineId! },
-      include: { trianglePosition: { include: { triangle: true } } }
+      include: { 
+        trianglePosition: {
+          include: { triangle: true },
+          orderBy: { createdAt: 'desc' } // Get newest positions first
+        }
+      }
     })
 
-    if (referrer?.trianglePosition?.triangle && 
-        referrer.trianglePosition.triangle.planType === user.plan &&
-        !referrer.trianglePosition.triangle.isComplete) {
+    // Get the most recent triangle position for the referrer
+    const referrerTrianglePosition = referrer?.trianglePosition?.[0]
+
+    if (referrerTrianglePosition?.triangle && 
+        referrerTrianglePosition.triangle.planType === user.plan &&
+        !referrerTrianglePosition.triangle.isComplete) {
       
       // Check if there's an available position in referrer's triangle
       const availablePosition = await prisma.trianglePosition.findFirst({
         where: {
-          triangleId: referrer.trianglePosition.triangleId,
+          triangleId: referrerTrianglePosition.triangleId,
           userId: null
         },
         orderBy: [
@@ -89,7 +97,7 @@ export async function assignUserToTriangle(userId: string, referrerId?: string) 
       })
 
       if (availablePosition) {
-        targetTriangle = referrer.trianglePosition.triangle
+        targetTriangle = referrerTrianglePosition.triangle
       }
     }
   }
@@ -280,15 +288,21 @@ export async function cycleTriangle(triangleId: string) {
     }
   }
 
-  // Mark original triangle as payout processed
-  await prisma.triangle.update({
-    where: { id: triangleId },
-    data: { payoutProcessed: true }
+  // Delete the old triangle and all its positions
+  // First delete all positions in the triangle
+  await prisma.trianglePosition.deleteMany({
+    where: { triangleId: triangleId }
+  })
+
+  // Then delete the triangle itself
+  await prisma.triangle.delete({
+    where: { id: triangleId }
   })
 }
 
 export async function getUserTriangleInfo(userId: string) {
-  const position = await prisma.trianglePosition.findUnique({
+  // Get all positions for this user, ordered by creation date (newest first)
+  const positions = await prisma.trianglePosition.findMany({
     where: { userId },
     include: {
       triangle: {
@@ -302,12 +316,17 @@ export async function getUserTriangleInfo(userId: string) {
           }
         }
       }
-    }
+    },
+    orderBy: { createdAt: 'desc' } // Get newest positions first
   })
 
-  if (!position) {
+  // If no positions found, return null
+  if (positions.length === 0) {
     return null
   }
+
+  // Use the most recent position (first in the ordered list)
+  const position = positions[0]
 
   const filledPositions = position.triangle.positions.filter(p => p.userId).length
   const completion = (filledPositions / 15) * 100

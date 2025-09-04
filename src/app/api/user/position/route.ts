@@ -49,15 +49,23 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Transform positions for frontend
-    const positions = triangleInfo.triangle.positions.map(pos => ({
-      id: pos.id,
-      positionKey: pos.positionKey,
-      username: pos.user?.username || null,
-      planType: pos.user?.plan || null,
-      level: pos.level,
-      position: pos.position
-    }))
+    // Transform positions for frontend and ensure correct order
+    const positions = triangleInfo.triangle.positions
+      .map(pos => ({
+        id: pos.id,
+        positionKey: pos.positionKey,
+        username: pos.user?.username || null,
+        planType: pos.user?.plan || null,
+        level: pos.level,
+        position: pos.position
+      }))
+      .sort((a, b) => {
+        // Sort by level first, then by position within level
+        if (a.level !== b.level) {
+          return a.level - b.level;
+        }
+        return a.position - b.position;
+      });
 
     const responseData = {
       triangle: {

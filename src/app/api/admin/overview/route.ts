@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, PlanType } from '@prisma/client'
 import jwt from 'jsonwebtoken'
 
 const prisma = new PrismaClient()
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     // Fetch stats
     const totalUsers = await prisma.user.count()
     const activeTriangles = await prisma.triangle.count({
-      where: { completedAt: null }
+      where: { isComplete: false }
     })
     const pendingDeposits = await prisma.transaction.count({
       where: { 
@@ -123,50 +123,31 @@ export async function GET(request: NextRequest) {
     }))
     
     // Fetch triangle stats by plan
-    let activeTrianglesByPlan = [];
-    let completedTrianglesByPlan = [];
+    const planTypes: PlanType[] = ['King', 'Queen', 'Bishop', 'Knight'];
     
-    try {
-      // Fetch all triangles and manually group them
-      const allTriangles = await prisma.triangle.findMany({
-        select: {
-          planType: true,
-          completedAt: true
-        }
-      });
-      
-      // Group triangles manually
-      const trianglesByPlanMap = new Map();
-      
-      allTriangles.forEach(triangle => {
-        const key = `${triangle.planType}-${triangle.completedAt ? 'completed' : 'active'}`;
-        if (trianglesByPlanMap.has(key)) {
-          trianglesByPlanMap.set(key, trianglesByPlanMap.get(key) + 1);
-        } else {
-          trianglesByPlanMap.set(key, 1);
-        }
-      });
-      
-      // Convert map to arrays
-      activeTrianglesByPlan = Array.from(trianglesByPlanMap.entries())
-        .filter(([key]) => key.endsWith('-active'))
-        .map(([key, count]) => {
-          const planType = key.replace('-active', '');
-          return { planType, count };
+    const activeTrianglesByPlan = await Promise.all(
+      planTypes.map(async (planType) => {
+        const count = await prisma.triangle.count({
+          where: { 
+            planType: planType,
+            isComplete: false
+          }
         });
-        
-      completedTrianglesByPlan = Array.from(trianglesByPlanMap.entries())
-        .filter(([key]) => key.endsWith('-completed'))
-        .map(([key, count]) => {
-          const planType = key.replace('-completed', '');
-          return { planType, count };
+        return { planType, count };
+      })
+    );
+    
+    const completedTrianglesByPlan = await Promise.all(
+      planTypes.map(async (planType) => {
+        const count = await prisma.triangle.count({
+          where: { 
+            planType: planType,
+            isComplete: true
+          }
         });
-    } catch (error) {
-      console.error('Error fetching triangle stats:', error);
-      // If there's an error, we'll return empty arrays for triangle stats
-      activeTrianglesByPlan = [];
-      completedTrianglesByPlan = [];
-    }
+        return { planType, count };
+      })
+    );
     
     return NextResponse.json({
       stats: {

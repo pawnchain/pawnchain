@@ -26,6 +26,13 @@ interface TriangleData {
   }>
 }
 
+interface TriangleStats {
+  planType: string
+  active: number
+  completed: number
+  total: number
+}
+
 const ChessAdminTriangles: React.FC = () => {
   const [triangles, setTriangles] = useState<TriangleData[]>([])
   const [loading, setLoading] = useState(true)
@@ -34,6 +41,7 @@ const ChessAdminTriangles: React.FC = () => {
   const [showTriangleModal, setShowTriangleModal] = useState(false)
   const [filterPlan, setFilterPlan] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [triangleStats, setTriangleStats] = useState<TriangleStats[]>([])
 
   useEffect(() => {
     const fetchTriangles = async () => {
@@ -44,6 +52,10 @@ const ChessAdminTriangles: React.FC = () => {
         if (response.ok) {
           const data = await response.json()
           setTriangles(data)
+          
+          // Calculate stats by plan
+          const stats = calculateTriangleStats(data)
+          setTriangleStats(stats)
         } else {
           const errorData = await response.json()
           setError(errorData.error || 'Failed to fetch triangles')
@@ -60,6 +72,21 @@ const ChessAdminTriangles: React.FC = () => {
 
     fetchTriangles()
   }, [])
+
+  const calculateTriangleStats = (triangles: TriangleData[]): TriangleStats[] => {
+    const planTypes = ['King', 'Queen', 'Bishop', 'Knight']
+    return planTypes.map(planType => {
+      const planTriangles = triangles.filter(t => t.planType === planType)
+      const active = planTriangles.filter(t => !t.isComplete).length
+      const completed = planTriangles.filter(t => t.isComplete).length
+      return {
+        planType,
+        active,
+        completed,
+        total: active + completed
+      }
+    })
+  }
 
   const getPlanPiece = (plan: string) => {
     switch (plan) {
@@ -150,6 +177,55 @@ const ChessAdminTriangles: React.FC = () => {
                 <p className="text-sm text-gray-400">Total Formations</p>
               </motion.div>
             </div>
+          </motion.div>
+
+          {/* Triangle Stats Cards */}
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            {triangleStats.map((stat, index) => (
+              <motion.div
+                key={stat.planType}
+                className="glass-morphism rounded-xl p-6 border border-white/10"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * index }}
+                whileHover={{ scale: 1.02, y: -5 }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-3xl">
+                    {getPlanPiece(stat.planType)}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-white">{stat.total}</p>
+                    <p className="text-xs text-gray-400">Total</p>
+                  </div>
+                </div>
+                
+                <h3 className="text-lg font-bold text-white mb-3">{stat.planType}</h3>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                      <span className="text-sm text-gray-300">Active</span>
+                    </div>
+                    <span className="text-sm font-bold text-white">{stat.active}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm text-gray-300">Completed</span>
+                    </div>
+                    <span className="text-sm font-bold text-white">{stat.completed}</span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </motion.div>
 
           {/* Filters */}
