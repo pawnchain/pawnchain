@@ -172,6 +172,9 @@ export async function PATCH(
         where: { userId: transaction.userId },
         data: { status: 'CONSOLIDATED' }
       })
+      
+      // TODO: We should invalidate the user's session here
+      // This would require access to the session store or JWT invalidation
     }
     
     return NextResponse.json(updatedTransaction)

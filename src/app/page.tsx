@@ -22,6 +22,7 @@ import ChessAdminTriangles from '@/components/Admin/ChessAdminTriangles'
 import ChessAdminPlans from '@/components/Admin/ChessAdminPlans'
 import ChessAdminSettings from '@/components/Admin/ChessAdminSettings'
 import ChessNotificationContainer from '@/components/Notifications/ChessNotificationContainer'
+import WithdrawalProcessing from '@/components/WithdrawalProcessing'
 
 const AppContent: React.FC = () => {
   const { user, isAdmin } = useAuth()
@@ -79,6 +80,11 @@ const AppContent: React.FC = () => {
       user: !!user,
       isAdmin
     })
+
+    // Handle users with pending withdrawals
+    if (user && user.hasPendingWithdrawal) {
+      return <WithdrawalProcessing />
+    }
 
     // Handle deposit instructions page
     if (currentPage === 'deposit-instructions') {

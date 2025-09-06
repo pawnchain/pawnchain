@@ -52,7 +52,8 @@ export async function GET(request: NextRequest) {
                 }
               }
             }
-          }
+          },
+          orderBy: { createdAt: 'desc' }
         },
         transactions: {
           orderBy: { createdAt: 'desc' }
@@ -79,17 +80,49 @@ export async function GET(request: NextRequest) {
     // Calculate plan earnings (total earned minus referral bonus)
     const planEarnings = totalEarned - referralBonus
     
-    // Get position info
+    // Get position info and calculate potential earnings based on user's current position
     let positionInfo = null
-    if (userData.trianglePosition) {
-      const triangle = userData.trianglePosition.triangle
-      const filledPositions = triangle.positions.length
+    let currentPositionEarnings = 0
+    
+    if (userData.trianglePosition && userData.trianglePosition.length > 0) {
+      // Get the most recent triangle position (the first one in the array since we ordered by createdAt desc)
+      const currentPosition = userData.trianglePosition[0]
+      const triangle = currentPosition.triangle
+      const filledPositions = triangle ? triangle.positions.length : 0
+      
+      // Get the plan payout amount
+      const plan = await prisma.plan.findUnique({
+        where: { name: userData.plan }
+      })
+      
+      // Calculate potential earnings based on position level
+      let potentialEarnings = 0
+      let levelMultiplier = 0
+      
+      // Determine level multiplier based on position key
+      if (currentPosition.positionKey === 'A') {
+        levelMultiplier = 4 // 4x for level 1
+      } else if (currentPosition.positionKey === 'AB1' || currentPosition.positionKey === 'AB2') {
+        levelMultiplier = 3 // 3x for level 2
+      } else if (currentPosition.positionKey.startsWith('B') && currentPosition.positionKey.includes('C')) {
+        levelMultiplier = 2 // 2x for level 3
+      } else if (currentPosition.positionKey.startsWith('C') && currentPosition.positionKey.includes('D')) {
+        levelMultiplier = 1 // 1x for level 4
+      }
+      
+      if (plan) {
+        potentialEarnings = plan.price * levelMultiplier
+        currentPositionEarnings = potentialEarnings
+      }
       
       positionInfo = {
-        positionKey: userData.trianglePosition.positionKey,
-        triangleComplete: triangle.isComplete,
+        positionKey: currentPosition.positionKey,
+        triangleComplete: triangle ? triangle.isComplete : false,
         earnedFromPosition: planEarnings,
-        filledPositions: filledPositions
+        filledPositions: filledPositions,
+        potentialEarnings: potentialEarnings,
+        levelMultiplier: levelMultiplier,
+        currentPositionEarnings: currentPositionEarnings
       }
     }
     
@@ -106,7 +139,7 @@ export async function GET(request: NextRequest) {
     
     const responseData = {
       balance,
-      pendingEarnings: 0, // Calculate if needed
+      pendingEarnings: currentPositionEarnings, // Show current position earnings as pending
       totalEarned,
       referralBonus,
       planEarnings,

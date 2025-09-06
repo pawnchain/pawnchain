@@ -22,9 +22,9 @@ const ChessWallet: React.FC = () => {
     pendingEarnings: 0, 
     totalEarned: 0, 
     referralBonus: 0,
-    positionInfo: null as { positionKey: string; triangleComplete: boolean; earnedFromPosition: number; filledPositions?: number } | null
+    positionInfo: null as { positionKey: string; triangleComplete: boolean; earnedFromPosition: number; filledPositions?: number; potentialEarnings?: number; levelMultiplier?: number; currentPositionEarnings?: number } | null
   })
-  const [transactions, setTransactions] = useState<Array<{ id: string; type: string; amount: number; status: string; date: string }>>([])
+  const [transactions, setTransactions] = useState<Array<{ id: string; type: string; amount: number; status: string; date: string; description?: string }>>([])
 
   useEffect(() => {
     const load = async () => {
@@ -44,24 +44,7 @@ const ChessWallet: React.FC = () => {
         setTransactions(data.history)
       } catch (e: any) {
         setError(e.message || 'Failed to load wallet')
-        // Mock data for demo
-        setWalletData({
-          balance: 125.50,
-          pendingEarnings: 45.25,
-          totalEarned: 89.75,
-          referralBonus: 35.75,
-          positionInfo: {
-            positionKey: 'A',
-            triangleComplete: true,
-            earnedFromPosition: 54.00,
-            filledPositions: 15
-          }
-        })
-        setTransactions([
-          { id: '1', type: 'DEPOSIT', amount: 100, status: 'CONFIRMED', date: '2024-01-15' },
-          { id: '2', type: 'REFERRAL_BONUS', amount: 15.75, status: 'CONFIRMED', date: '2024-01-16' },
-          { id: '3', type: 'PAYOUT', amount: 50, status: 'PENDING', date: '2024-01-17' },
-        ])
+        console.error('Failed to load wallet data:', e)
       } finally {
         setLoading(false)
       }
@@ -77,6 +60,18 @@ const ChessWallet: React.FC = () => {
       case 'Knight': return '♘'
       default: return '♔'
     }
+  }
+
+  const calculatePotentialEarnings = (plan: string) => {
+    // Based on the plan data from restore-plans-and-admin.js
+    const planPayouts: Record<string, number> = {
+      'King': 400,
+      'Queen': 200,
+      'Bishop': 100,
+      'Knight': 40
+    }
+    
+    return planPayouts[plan] || 0
   }
 
   const canRequestPayout = () => {
@@ -301,7 +296,7 @@ const ChessWallet: React.FC = () => {
               {
                 title: 'Pending Royal Earnings',
                 value: `${walletData.pendingEarnings.toFixed(2)} USDT`,
-                subtitle: 'Awaiting council approval',
+                subtitle: 'Current position earnings',
                 icon: '⏳',
                 color: 'text-yellow-400',
                 bgGradient: 'from-yellow-500/20 to-yellow-600/10'
@@ -310,7 +305,7 @@ const ChessWallet: React.FC = () => {
                 title: 'Position Rewards',
                 value: `${walletData.totalEarned.toFixed(2)} USDT`,
                 subtitle: walletData.positionInfo ? 
-                  `Position ${walletData.positionInfo.positionKey}: ${walletData.positionInfo.earnedFromPosition.toFixed(2)} USDT` : 
+                  `Position ${walletData.positionInfo.positionKey}` : 
                   'Based on royal standing',
                 icon: getPlanPiece(user?.plan || ''),
                 color: 'text-green-400',
@@ -417,6 +412,14 @@ const ChessWallet: React.FC = () => {
                       {walletData.positionInfo?.filledPositions || 0}/15
                     </span>
                   </div>
+                  {walletData.positionInfo?.currentPositionEarnings && walletData.positionInfo?.levelMultiplier && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Current Position Earnings:</span>
+                      <span className="text-yellow-400 font-bold">
+                        {walletData.positionInfo.currentPositionEarnings.toFixed(2)} USDT ({walletData.positionInfo.levelMultiplier}x plan)
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -492,6 +495,9 @@ const ChessWallet: React.FC = () => {
                       <div>
                         <p className="text-white font-medium">{getTypeLabel(transaction.type)}</p>
                         <p className="text-sm text-gray-400">{transaction.date}</p>
+                        {transaction.description && (
+                          <p className="text-xs text-gray-500 mt-1">{transaction.description}</p>
+                        )}
                       </div>
                     </div>
                     
