@@ -223,67 +223,107 @@ export async function cycleTriangle(triangleId: string) {
       { level: 'asc' },
       { position: 'asc' }
     ]
-  })
+  });
 
-  const triangle = positions[0]?.triangle
-  if (!triangle) return
+  const triangle = positions[0]?.triangle;
+  if (!triangle) return;
 
   // Get AB1 and AB2 users (they will become new A positions)
-  const ab1User = positions.find(p => p.level === 2 && p.position === 0)?.user
-  const ab2User = positions.find(p => p.level === 2 && p.position === 1)?.user
+  const ab1Position = positions.find(p => p.level === 2 && p.position === 0);
+  const ab2Position = positions.find(p => p.level === 2 && p.position === 1);
+
+  const ab1User = ab1Position?.user;
+  const ab2User = ab2Position?.user;
 
   if (ab1User && ab2User) {
     // Create two new triangles
-    const triangle1 = await createTriangle(triangle.planType)
-    const triangle2 = await createTriangle(triangle.planType)
+    const triangle1 = await createTriangle(triangle.planType);
+    const triangle2 = await createTriangle(triangle.planType);
 
     // Assign AB1 to position A of triangle1
-    await prisma.trianglePosition.updateMany({
+    await prisma.trianglePosition.update({
       where: {
-        triangleId: triangle1.id,
-        level: 1,
-        position: 0
+        triangleId_level_position: {
+          triangleId: triangle1.id,
+          level: 1,
+          position: 0
+        }
       },
       data: { userId: ab1User.id }
-    })
+    });
 
     // Assign AB2 to position A of triangle2
-    await prisma.trianglePosition.updateMany({
+    await prisma.trianglePosition.update({
       where: {
-        triangleId: triangle2.id,
-        level: 1,
-        position: 0
+        triangleId_level_position: {
+          triangleId: triangle2.id,
+          level: 1,
+          position: 0
+        }
       },
       data: { userId: ab2User.id }
-    })
+    });
 
-    // Distribute remaining users between the two triangles
-    const remainingUsers = positions.filter(p => 
-      p.user && p.level >= 3 && p.user.id !== ab1User.id && p.user.id !== ab2User.id
-    )
+    // Define the proper subtree mappings for vertical split with promotion
+    // AB1's subtree (left side): B1C1 -> AB1, B1C2 -> AB2, C1D1 -> B1C1, etc.
+    const ab1SubtreeMap = {
+      'B1C1': 'AB1',
+      'B1C2': 'AB2',
+      'C1D1': 'B1C1',
+      'C1D2': 'B1C2',
+      'C2D1': 'B2C1',
+      'C2D2': 'B2C2'
+    };
 
-    // Split users between triangles (alternate assignment)
-    for (let i = 0; i < remainingUsers.length; i++) {
-      const targetTriangleId = i % 2 === 0 ? triangle1.id : triangle2.id
-      const user = remainingUsers[i].user!
+    // AB2's subtree (right side): B2C1 -> AB1, B2C2 -> AB2, C3D1 -> B1C1, etc.
+    const ab2SubtreeMap = {
+      'B2C1': 'AB1',
+      'B2C2': 'AB2',
+      'C3D1': 'B1C1',
+      'C3D2': 'B1C2',
+      'C4D1': 'B2C1',
+      'C4D2': 'B2C2'
+    };
 
-      // Find next available position in target triangle
-      const availablePosition = await prisma.trianglePosition.findFirst({
-        where: {
-          triangleId: targetTriangleId,
-          userId: null
-        },
-        orderBy: [
-          { level: 'asc' },
-          { position: 'asc' }
-        ]
-      })
+    // Move users from AB1's subtree to triangle1 with promotion
+    for (const [oldKey, newKey] of Object.entries(ab1SubtreeMap)) {
+      const oldPosition = positions.find(p => p.positionKey === oldKey);
+      if (oldPosition?.user) {
+        // Find the corresponding position in triangle1
+        const newPosition = await prisma.trianglePosition.findFirst({
+          where: {
+            triangleId: triangle1.id,
+            positionKey: newKey
+          }
+        });
 
-      if (availablePosition) {
-        await prisma.trianglePosition.update({
-          where: { id: availablePosition.id },
-          data: { userId: user.id }
-        })
+        if (newPosition) {
+          await prisma.trianglePosition.update({
+            where: { id: newPosition.id },
+            data: { userId: oldPosition.user.id }
+          });
+        }
+      }
+    }
+
+    // Move users from AB2's subtree to triangle2 with promotion
+    for (const [oldKey, newKey] of Object.entries(ab2SubtreeMap)) {
+      const oldPosition = positions.find(p => p.positionKey === oldKey);
+      if (oldPosition?.user) {
+        // Find the corresponding position in triangle2
+        const newPosition = await prisma.trianglePosition.findFirst({
+          where: {
+            triangleId: triangle2.id,
+            positionKey: newKey
+          }
+        });
+
+        if (newPosition) {
+          await prisma.trianglePosition.update({
+            where: { id: newPosition.id },
+            data: { userId: oldPosition.user.id }
+          });
+        }
       }
     }
   }
@@ -292,12 +332,12 @@ export async function cycleTriangle(triangleId: string) {
   // First delete all positions in the triangle
   await prisma.trianglePosition.deleteMany({
     where: { triangleId: triangleId }
-  })
+  });
 
   // Then delete the triangle itself
   await prisma.triangle.delete({
     where: { id: triangleId }
-  })
+  });
 }
 
 export async function getUserTriangleInfo(userId: string) {

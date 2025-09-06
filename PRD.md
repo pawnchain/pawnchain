@@ -87,8 +87,7 @@ The system employs a unique dual frontend approach:
    Level 2: AB1          AB2 (2 positions)  
    /     \              /     \
 Level 3: B1C1  B1C2  B2C1  B2C2 (4 positions)
-Level 4: L4P1  L4P2  L4P3  L4P4  L4P5  L4P6  L4P7  L4P8 (8 positions)
-```
+Level 4: B1C1D1  B1C1D2  B1C2D1  B1C2D2  B2C1D1  B2C1D2  B2C2D1  B2C2D2 (8 positions)
 
 #### 1.2 Position Assignment Logic
 - **Referral-Based Placement**: New users placed in referrer's triangle if available
