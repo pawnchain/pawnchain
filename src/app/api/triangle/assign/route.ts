@@ -97,28 +97,18 @@ async function findOrCreateTriangleForUser(userId: string) {
     // 3. If no available triangle, create a new one
     const newTriangle: any = await prisma.triangle.create({
       data: {
-        planType: user.plan,
-        positions: [] // Initialize as empty array
+        planType: user.plan
       }
     })
 
     // Create the first position and assign the user to it
-    const position: any = await (prisma as any).position.create({
+    const position: any = await prisma.trianglePosition.create({
       data: {
         triangleId: newTriangle.id,
+        level: 1,
         position: 0,
+        positionKey: 'A',
         userId: user.id
-      }
-    })
-
-    // Update user with their triangle position
-    await prisma.user.update({
-      where: {
-        id: userId
-      },
-      data: {
-        trianglePosition: 0,
-        triangleId: newTriangle.id
       }
     })
 
@@ -133,35 +123,25 @@ async function findOrCreateTriangleForUser(userId: string) {
 async function assignUserToTriangle(userId: string, triangleId: string) {
   try {
     // Find the first available position in the triangle
-    const availablePosition: any = await (prisma as any).position.findFirst({
+    const availablePosition: any = await prisma.trianglePosition.findFirst({
       where: {
         triangleId: triangleId,
         userId: null
       },
       orderBy: {
+        level: 'asc',
         position: 'asc'
       }
     })
 
     if (availablePosition) {
       // Assign user to this position
-      const updatedPosition: any = await (prisma as any).position.update({
+      const updatedPosition: any = await prisma.trianglePosition.update({
         where: {
           id: availablePosition.id
         },
         data: {
           userId: userId
-        }
-      })
-
-      // Update user with their triangle position
-      await prisma.user.update({
-        where: {
-          id: userId
-        },
-        data: {
-          trianglePosition: updatedPosition.position,
-          triangleId: triangleId
         }
       })
 

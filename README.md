@@ -42,6 +42,14 @@ The system follows a **Next.js App Router-based full-stack architecture** with d
 
 For a detailed history of changes, please see [CHANGELOG.md](CHANGELOG.md).
 
+## Recent Updates
+
+### Dashboard and Wallet Display Fixes
+- Fixed Royal Treasury Balance calculation on user dashboard to match wallet page values
+- Corrected Total Conquered display to show position earnings instead of total earned
+- Updated Position Rewards calculation to use current position earnings
+- Ensured consistent earnings calculations across dashboard and wallet components
+
 ## Getting Started
 
 ### Prerequisites

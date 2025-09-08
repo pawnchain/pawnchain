@@ -1,6 +1,7 @@
 export interface User {
   id: string
   username: string
+  email?: string | null
   walletAddress: string
   plan: PlanType
   trianglePosition?: number
@@ -11,6 +12,14 @@ export interface User {
   balance: number
   totalEarned: number
   createdAt: Date
+  hasPendingWithdrawal?: boolean
+  withdrawalTransaction?: Transaction | null
+  deletedAt?: Date | null
+  isActive?: boolean
+  isAdmin?: boolean
+  status?: 'PENDING' | 'CONFIRMED'
+  loginAttempts?: number
+  lockedUntil?: Date | null
 }
 
 export interface Position {
@@ -33,12 +42,15 @@ export interface Triangle {
 export interface Transaction {
   id: string
   userId: string
-  type: 'deposit' | 'payout' | 'referral'
+  type: 'DEPOSIT' | 'PAYOUT' | 'REFERRAL_BONUS' | 'WITHDRAWAL'
   amount: number
-  status: 'pending' | 'confirmed' | 'rejected' | 'completed'
+  status: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'COMPLETED' | 'CONSOLIDATED'
   transactionId?: string
   createdAt: Date
   expiresAt?: Date
+  confirmedAt?: Date
+  rejectedAt?: Date
+  rejectionReason?: string
 }
 
 export interface Plan {

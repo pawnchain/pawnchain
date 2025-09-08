@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's triangle position
-    const userPosition = await prisma.trianglePosition.findUnique({
+    const userPositions = await prisma.trianglePosition.findMany({
       where: { userId: user.id },
       include: {
         triangle: {
@@ -63,12 +63,15 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    if (!userPosition) {
+    if (!userPositions || userPositions.length === 0) {
       return NextResponse.json(
         { error: 'User not in any triangle' },
         { status: 400 }
       )
     }
+
+    // Use the first position for payout logic
+    const userPosition = userPositions[0];
 
     // Check if user is in position A (level 1, position 0)
     if (userPosition.level !== 1 || userPosition.position !== 0) {

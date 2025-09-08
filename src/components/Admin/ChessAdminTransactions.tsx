@@ -522,7 +522,7 @@ const ChessAdminTransactions: React.FC = () => {
                       <div className="flex justify-between">
                         <span className="text-gray-400">Amount:</span>
                         <span className="text-white font-bold">
-                          {selectedTransaction.type === 'payout' ? '-' : '+'}{selectedTransaction.amount} USDT
+                          {selectedTransaction.type === 'PAYOUT' ? '-' : '+'}{selectedTransaction.amount} USDT
                         </span>
                       </div>
                       <div className="flex justify-between">

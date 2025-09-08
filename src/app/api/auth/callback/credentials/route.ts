@@ -24,7 +24,14 @@ export async function POST(request: NextRequest) {
 
     // Find user in database
     const user = await prisma.user.findUnique({
-      where: { username }
+      where: { username },
+      include: {
+        trianglePosition: {
+          include: {
+            triangle: true
+          }
+        }
+      }
     })
 
     console.log('User lookup result:', user ? 'Found' : 'Not found', user?.id)
@@ -88,8 +95,8 @@ export async function POST(request: NextRequest) {
       email: user.email,
       walletAddress: user.walletAddress,
       plan: user.plan,
-      trianglePosition: user.trianglePosition,
-      triangleId: user.triangleId,
+      trianglePosition: user.trianglePosition?.[0] || null,
+      triangleId: user.trianglePosition?.[0]?.triangleId || null,
       referralCode: user.referralCode,
       uplineId: user.uplineId,
       balance: user.balance,

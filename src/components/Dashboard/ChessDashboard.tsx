@@ -18,6 +18,7 @@ const ChessDashboard: React.FC<ChessDashboardProps> = ({ onNavigate }) => {
   const { user } = useAuth()
   const [triangleData, setTriangleData] = useState<any>(null)
   const [transactions, setTransactions] = useState<any[]>([])
+  const [walletData, setWalletData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showReferralModal, setShowReferralModal] = useState(false)
@@ -29,9 +30,10 @@ const ChessDashboard: React.FC<ChessDashboardProps> = ({ onNavigate }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [triangleResponse, transactionsResponse] = await Promise.all([
+        const [triangleResponse, transactionsResponse, walletResponse] = await Promise.all([
           fetch('/api/triangle'),
           fetch('/api/transactions'),
+          fetch('/api/user/wallet')
         ])
 
         if (triangleResponse.ok) {
@@ -46,6 +48,13 @@ const ChessDashboard: React.FC<ChessDashboardProps> = ({ onNavigate }) => {
           setTransactions(data)
         } else {
           setError('Failed to fetch transactions')
+        }
+
+        if (walletResponse.ok) {
+          const data = await walletResponse.json()
+          setWalletData(data)
+        } else {
+          setError('Failed to fetch wallet data')
         }
 
       } catch (err) {
@@ -116,7 +125,7 @@ const ChessDashboard: React.FC<ChessDashboardProps> = ({ onNavigate }) => {
   const stats = [
     {
       label: 'Royal Treasury',
-      value: `${user?.balance || 0}`,
+      value: `${((walletData?.positionInfo?.currentPositionEarnings || 0) + (walletData?.referralBonus || 0)).toFixed(2)}`,
       unit: 'USDT',
       icon: Wallet,
       color: 'from-blue-500 to-blue-600',
@@ -124,7 +133,7 @@ const ChessDashboard: React.FC<ChessDashboardProps> = ({ onNavigate }) => {
     },
     {
       label: 'Total Conquered',
-      value: `${user?.totalEarned || 0}`,
+      value: `${walletData?.positionInfo?.currentPositionEarnings?.toFixed(2) || '0.00'}`,
       unit: 'USDT',
       icon: TrendingUp,
       color: 'from-green-500 to-green-600',

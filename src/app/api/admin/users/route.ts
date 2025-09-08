@@ -107,9 +107,9 @@ export async function GET(request: NextRequest) {
         username: user.username,
         walletAddress: user.walletAddress,
         plan: user.plan,
-        trianglePosition: user.trianglePosition?.positionKey || null,
-        triangleId: user.trianglePosition?.triangleId || null,
-        triangleComplete: user.trianglePosition?.triangle?.isComplete || false,
+        trianglePosition: user.trianglePosition?.[0]?.positionKey || null,
+        triangleId: user.trianglePosition?.[0]?.triangleId || null,
+        triangleComplete: user.trianglePosition?.[0]?.triangle?.isComplete || false,
         filledPositions: 0, // Will be calculated if needed
         referralCode: user.referralCode,
         balance: user.balance,

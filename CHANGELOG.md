@@ -5,6 +5,19 @@ All notable changes to the ForgeChain Networks project will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2025-09-08
+
+### Fixed
+
+- **Dashboard Earnings Display**: Corrected the Royal Treasury Balance calculation on the user dashboard to match the values shown on the wallet page.
+- **Total Conquered Value**: Fixed the "Total Conquered" display on the user dashboard to show position earnings instead of the raw total earned value.
+- **Earnings Consistency**: Ensured consistent earnings calculations across dashboard and wallet components by using the same data sources and formulas.
+
+### Changed
+
+- **User Dashboard Data Fetching**: Enhanced the dashboard to fetch wallet data for accurate earnings display.
+- **Wallet Value Calculations**: Updated value calculations to properly reflect position-based earnings according to the defined multipliers (4x for Level 1, 3x for Level 2, etc.).
+
 ## [0.1.0] - 2025-09-04
 
 ### Fixed
@@ -71,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tested MongoDB soft delete filtering
 - Validated admin dashboard error handling
 - Checked triangle statistics calculation
+- Verified dashboard and wallet earnings consistency
 
 ## [Environment]
 

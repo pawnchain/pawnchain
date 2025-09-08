@@ -33,9 +33,8 @@ async function verifyAdmin(request: NextRequest) {
 // GET /api/admin/users/:id - Get specific user details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  // Verify admin status
   const adminUser = await verifyAdmin(request)
   if (!adminUser) {
     return NextResponse.json(
@@ -45,7 +44,7 @@ export async function GET(
   }
   
   try {
-    const { id } = params
+    const { id } = await params
     
     // Fetch user with related data
     const user = await prisma.user.findUnique({
@@ -56,14 +55,14 @@ export async function GET(
             username: true
           }
         },
-        referrals: {
+        downlines: {
           select: {
             username: true,
             plan: true,
             createdAt: true
           }
         },
-        trianglePositions: {
+        trianglePosition: {
           include: {
             triangle: true
           }
@@ -97,13 +96,8 @@ export async function GET(
       isActive: user.isActive,
       isAdmin: user.isAdmin,
       upline: user.upline,
-      referrals: user.referrals,
-      trianglePositions: user.trianglePositions.map(pos => ({
-        id: pos.id,
-        position: pos.position,
-        triangleId: pos.triangleId,
-        triangle: pos.triangle
-      })),
+      referrals: user.downlines,
+      trianglePositions: user.trianglePosition ? [user.trianglePosition] : [],
       transactions: user.transactions.map(tx => ({
         id: tx.id,
         type: tx.type,
@@ -129,9 +123,8 @@ export async function GET(
 // PATCH /api/admin/users/:id - Update user details
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  // Verify admin status
   const adminUser = await verifyAdmin(request)
   if (!adminUser) {
     return NextResponse.json(
@@ -141,7 +134,7 @@ export async function PATCH(
   }
   
   try {
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     const { action } = body
     

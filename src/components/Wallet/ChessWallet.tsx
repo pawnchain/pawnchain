@@ -287,23 +287,23 @@ const ChessWallet: React.FC = () => {
             {[
               {
                 title: 'Royal Treasury Balance',
-                value: `${walletData.balance.toFixed(2)} USDT`,
-                subtitle: 'Available for royal decrees',
+                value: `${((walletData.positionInfo?.currentPositionEarnings || 0) + walletData.referralBonus).toFixed(2)} USDT`,
+                subtitle: 'Total available earnings',
                 icon: '💎',
                 color: 'text-blue-400',
                 bgGradient: 'from-blue-500/20 to-blue-600/10'
               },
               {
                 title: 'Pending Royal Earnings',
-                value: `${walletData.pendingEarnings.toFixed(2)} USDT`,
-                subtitle: 'Current position earnings',
+                value: `${((walletData.positionInfo?.currentPositionEarnings || 0) + walletData.referralBonus).toFixed(2)} USDT`,
+                subtitle: 'Total earnings from positions and referrals',
                 icon: '⏳',
                 color: 'text-yellow-400',
                 bgGradient: 'from-yellow-500/20 to-yellow-600/10'
               },
               {
                 title: 'Position Rewards',
-                value: `${walletData.totalEarned.toFixed(2)} USDT`,
+                value: `${walletData.positionInfo?.currentPositionEarnings?.toFixed(2) || '0.00'} USDT`,
                 subtitle: walletData.positionInfo ? 
                   `Position ${walletData.positionInfo.positionKey}` : 
                   'Based on royal standing',
