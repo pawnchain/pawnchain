@@ -148,7 +148,7 @@ export async function PATCH(
       })
     }
 
-    // Handle withdrawal completion - delete user account
+    // Handle withdrawal completion - REMOVE account soft deletion
     if (status === 'COMPLETED' && transaction.type === 'WITHDRAWAL') {
       // Remove user from triangle position
       await prisma.trianglePosition.updateMany({
@@ -156,16 +156,10 @@ export async function PATCH(
         data: { userId: null }
       })
 
-      // Soft delete user account
-      await prisma.user.update({
-        where: { id: transaction.userId },
-        data: {
-          deletedAt: new Date(),
-          isActive: false,
-          username: `withdrawn_${transaction.userId}`,
-          walletAddress: `withdrawn_${transaction.userId}`
-        }
-      })
+      // MARK: Removed soft deletion logic - users can now rejoin triangles
+      // - No more setting deletedAt timestamp
+      // - No more setting isActive to false
+      // - No more renaming username/walletAddress to withdrawn_[userId]
 
       // Mark all user transactions as consolidated
       await prisma.transaction.updateMany({

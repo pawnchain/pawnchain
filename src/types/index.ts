@@ -13,6 +13,7 @@ export interface User {
   totalEarned: number
   createdAt: Date
   hasPendingWithdrawal?: boolean
+  hasCompletedWithdrawal?: boolean
   withdrawalTransaction?: Transaction | null
   deletedAt?: Date | null
   isActive?: boolean

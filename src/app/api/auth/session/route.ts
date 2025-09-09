@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
       })
       
       // If user doesn't exist or has been deleted, return null
-      if (!user || user.deletedAt || !user.isActive) {
-        console.log('Session API - User account deleted or inactive, returning null')
+      if (!user || !user.isActive) {
+        console.log('Session API - User account inactive, returning null')
         // Clear the session cookie
         const response = NextResponse.json({ user: null })
         response.cookies.delete('next-auth.session-token')
@@ -59,7 +59,9 @@ export async function GET(request: NextRequest) {
       const userWithWithdrawalStatus = {
         ...decoded.user,
         hasPendingWithdrawal: userWithTransactions?.transactions && userWithTransactions.transactions.length > 0,
-        withdrawalTransaction: userWithTransactions?.transactions?.[0] || null
+        withdrawalTransaction: userWithTransactions?.transactions?.[0] || null,
+        // MARK: Added flag to indicate if user has completed a withdrawal
+        hasCompletedWithdrawal: userWithTransactions?.transactions?.some(tx => tx.status === 'COMPLETED') || false
       }
       
       console.log('Session API - returning user:', userWithWithdrawalStatus.username, 'isAdmin:', userWithWithdrawalStatus.isAdmin)

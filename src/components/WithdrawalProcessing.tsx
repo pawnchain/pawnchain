@@ -4,11 +4,13 @@ import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import ChessJoinTriangleModal from '@/components/Modals/ChessJoinTriangleModal'
 
 const WithdrawalProcessing: React.FC = () => {
   const { user, logout } = useAuth()
   const router = useRouter()
   const [timeLeft, setTimeLeft] = useState(10)
+  const [showJoinModal, setShowJoinModal] = useState(false)
 
   useEffect(() => {
     // Check if user should be on this page
@@ -17,7 +19,7 @@ const WithdrawalProcessing: React.FC = () => {
       return
     }
 
-    // Redirect to login if user account is deleted
+    // Redirect to login if user account is deleted (old logic)
     if (user && (user.deletedAt || !user.isActive)) {
       logout()
       router.push('/login')
@@ -109,14 +111,13 @@ const WithdrawalProcessing: React.FC = () => {
           </div>
           
           <p className="text-gray-400 mb-6">
-            Once the administrative team confirms your withdrawal, your account will be archived 
-            and your kingdom will be redistributed to continue the cycle of prosperity.
+            Once the administrative team confirms your withdrawal, you'll be able to join a new triangle formation.
           </p>
           
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">
             <p className="text-yellow-400 text-sm">
-              ⚠️ Your account will be automatically archived after withdrawal confirmation. 
-              Please ensure you have access to your wallet address: {user.walletAddress}
+              ⚠️ After confirmation, you can join a new triangle with the same account. 
+              Your username and wallet address will remain unchanged.
             </p>
           </div>
           
@@ -127,6 +128,17 @@ const WithdrawalProcessing: React.FC = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Join Triangle Modal for post-withdrawal */}
+      {showJoinModal && (
+        <ChessJoinTriangleModal
+          onClose={() => setShowJoinModal(false)}
+          onJoinSuccess={() => {
+            setShowJoinModal(false)
+            router.push('/dashboard')
+          }}
+        />
+      )}
     </div>
   )
 }

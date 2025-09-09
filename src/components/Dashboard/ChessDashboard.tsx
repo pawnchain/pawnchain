@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { TrendingUp, Users, Target, Clock, Wallet, Award, Crown, Shield, Sword, Castle, Zap, Star } from 'lucide-react'
+import { TrendingUp, Users, Target, Clock, Wallet, Award, Crown, Shield, Sword, Castle, Zap, Star, AlertTriangle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import ChessTriangleVisualization from './ChessTriangleVisualization'
 import ChessProgressBar from './ChessProgressBar'
 import ChessReferralModal from './ChessReferralModal'
 import ChessPayoutRequestModal from './ChessPayoutRequestModal'
 import ChessTransactionModal from '@/components/Modals/ChessTransactionModal'
+import ChessJoinTriangleModal from '@/components/Modals/ChessJoinTriangleModal'
 
 interface ChessDashboardProps {
   onNavigate: (page: string) => void
@@ -26,6 +27,7 @@ const ChessDashboard: React.FC<ChessDashboardProps> = ({ onNavigate }) => {
   const [depositInfo, setDepositInfo] = useState<any | null>(null)
   const [showTransactionModal, setShowTransactionModal] = useState(false)
   const [currentTransactionId, setCurrentTransactionId] = useState<string | null>(null)
+  const [showJoinTriangleModal, setShowJoinTriangleModal] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -226,6 +228,38 @@ const ChessDashboard: React.FC<ChessDashboardProps> = ({ onNavigate }) => {
             ))}
           </div>
 
+          {/* Post-Withdrawal State */}
+          {user?.hasCompletedWithdrawal && !triangleData && (
+            <motion.div 
+              className="mb-8 glass-morphism-strong rounded-2xl p-6 border border-yellow-500/30"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="p-2 bg-yellow-500/20 rounded-lg">
+                  <Award className="h-6 w-6 text-yellow-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-yellow-400">Conquest Completed!</h3>
+                  <p className="text-gray-300">You've successfully completed a triangle cycle</p>
+                </div>
+              </div>
+              <p className="text-gray-300 mb-4">
+                Congratulations on your successful withdrawal! You can now join a new triangle formation 
+                and continue your journey in the ForgeChain kingdom.
+              </p>
+              <motion.button
+                onClick={() => setShowJoinTriangleModal(true)}
+                className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold rounded-xl flex items-center space-x-2"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Target className="h-5 w-5" />
+                <span>Join New Triangle</span>
+              </motion.button>
+            </motion.div>
+          )}
+
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Triangle Progress */}
@@ -285,6 +319,25 @@ const ChessDashboard: React.FC<ChessDashboardProps> = ({ onNavigate }) => {
                       <ChessTriangleVisualization data={triangleData} />
                     </div>
                   </motion.div>
+                )}
+                
+                {/* No Triangle State */}
+                {!loading && !error && !triangleData && !user?.hasCompletedWithdrawal && (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4 opacity-30">♟️</div>
+                    <h3 className="text-xl font-bold text-white mb-2">Awaiting Battle Assignment</h3>
+                    <p className="text-gray-400 mb-6">
+                      You haven't been assigned to a triangle yet. Once assigned, your battle formation will appear here.
+                    </p>
+                    <motion.button
+                      onClick={() => setShowJoinTriangleModal(true)}
+                      className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold rounded-xl"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Request Battle Assignment
+                    </motion.button>
+                  </div>
                 )}
               </motion.div>
             </div>
@@ -557,6 +610,17 @@ const ChessDashboard: React.FC<ChessDashboardProps> = ({ onNavigate }) => {
             onClose={() => {
               setShowTransactionModal(false)
               setCurrentTransactionId(null)
+              window.location.reload()
+            }}
+          />
+        )}
+        
+        {showJoinTriangleModal && (
+          <ChessJoinTriangleModal
+            onClose={() => setShowJoinTriangleModal(false)}
+            onJoinSuccess={() => {
+              setShowJoinTriangleModal(false)
+              // Reload the page to show updated triangle data
               window.location.reload()
             }}
           />

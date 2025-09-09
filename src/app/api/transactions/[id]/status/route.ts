@@ -54,8 +54,12 @@ export async function GET(
         response.closable = false
         break
       case 'CONFIRMED':
-      case 'COMPLETED':
         response.message = 'Your transaction has been confirmed! You now have full access to the platform.'
+        break
+      case 'COMPLETED':
+        // MARK: Updated message for completed withdrawals
+        response.message = 'Your withdrawal has been completed! You can now join a new triangle formation.'
+        response.showJoinTriangle = true // New flag to show join triangle option
         break
       case 'REJECTED':
         response.message = 'Your transaction has been rejected.'

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Clock, CheckCircle, XCircle, AlertTriangle, Crown, Skull } from 'lucide-react'
+import { Clock, CheckCircle, XCircle, AlertTriangle, Crown, Skull, Target } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNotifications } from '@/contexts/NotificationContext'
 
@@ -14,6 +14,7 @@ interface TransactionStatus {
   message: string
   closable: boolean
   deleteAccount: boolean
+  showJoinTriangle?: boolean
   rejectionReason?: string
 }
 
@@ -157,8 +158,9 @@ const ChessTransactionModal: React.FC<ChessTransactionModalProps> = ({
       case 'PENDING':
         return type === 'DEPOSIT' ? 'Royal Tribute Processing' : 'Treasury Withdrawal Processing'
       case 'CONFIRMED':
-      case 'COMPLETED':
         return type === 'DEPOSIT' ? 'Tribute Accepted!' : 'Treasury Granted!'
+      case 'COMPLETED':
+        return type === 'DEPOSIT' ? 'Tribute Accepted!' : 'Withdrawal Completed!'
       case 'REJECTED':
         return type === 'DEPOSIT' ? 'Tribute Rejected' : 'Withdrawal Denied'
       default:
@@ -284,6 +286,26 @@ const ChessTransactionModal: React.FC<ChessTransactionModalProps> = ({
                     {status.message}
                   </p>
                   
+                  {/* Special message for completed withdrawals */}
+                  {status.showJoinTriangle && (
+                    <motion.div 
+                      className="mt-4 p-4 bg-gradient-to-r from-yellow-500/20 to-green-500/20 border border-yellow-500/30 rounded-lg"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.7 }}
+                    >
+                      <div className="flex items-start space-x-2">
+                        <Target className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-yellow-400 font-bold text-sm mb-1">Next Step:</p>
+                          <p className="text-yellow-300 text-sm">
+                            You can now join a new triangle formation with the same account.
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                  
                   {status.rejectionReason && (
                     <motion.div 
                       className="mt-4 p-4 bg-gradient-to-r from-red-500/20 to-red-600/10 border border-red-500/30 rounded-lg"
@@ -309,6 +331,8 @@ const ChessTransactionModal: React.FC<ChessTransactionModalProps> = ({
                     className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 ${
                       status.deleteAccount
                         ? 'btn-danger'
+                        : status.showJoinTriangle
+                        ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-black hover:from-yellow-400 hover:to-yellow-500'
                         : 'btn-success'
                     }`}
                     whileHover={{ scale: 1.02 }}
@@ -321,6 +345,11 @@ const ChessTransactionModal: React.FC<ChessTransactionModalProps> = ({
                       <span className="flex items-center justify-center space-x-2">
                         <Skull className="h-5 w-5" />
                         <span>Accept Banishment</span>
+                      </span>
+                    ) : status.showJoinTriangle ? (
+                      <span className="flex items-center justify-center space-x-2">
+                        <Target className="h-5 w-5" />
+                        <span>Join New Triangle</span>
                       </span>
                     ) : (
                       <span className="flex items-center justify-center space-x-2">
