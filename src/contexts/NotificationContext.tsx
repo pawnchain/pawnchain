@@ -41,11 +41,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }
 
   const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id ? { ...notification, read: true } : notification
-      )
-    )
+    // First, remove the notification from the list
+    setNotifications(prev => prev.filter(notification => notification.id !== id))
   }
 
   const clearAll = () => {

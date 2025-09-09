@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { DollarSign, TrendingUp, TrendingDown, Clock, CheckCircle, XCircle, Search, Filter, Eye } from 'lucide-react'
+import { DollarSign, TrendingUp, TrendingDown, Clock, CheckCircle, XCircle, Search, Filter, Eye, Check, X } from 'lucide-react'
 
 interface Transaction {
   id: string
@@ -26,6 +26,8 @@ const ChessAdminTransactions: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState('all')
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
   const [showTransactionModal, setShowTransactionModal] = useState(false)
+  const [selectedTransactions, setSelectedTransactions] = useState<string[]>([])
+  const [isSelecting, setIsSelecting] = useState(false)
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -124,6 +126,7 @@ const ChessAdminTransactions: React.FC = () => {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
+          // Fix: Use 'CONFIRMED' status which is what the API expects for approval
           status: action === 'approve' ? 'CONFIRMED' : 'REJECTED' 
         })
       })
@@ -135,6 +138,19 @@ const ChessAdminTransactions: React.FC = () => {
             ? { ...transaction, status: action === 'approve' ? 'CONFIRMED' : 'REJECTED' }
             : transaction
         ))
+        
+        // If we're viewing details in the modal, also update the selected transaction
+        if (selectedTransaction && selectedTransaction.id === transactionId) {
+          setSelectedTransaction({
+            ...selectedTransaction,
+            status: action === 'approve' ? 'CONFIRMED' : 'REJECTED'
+          })
+        }
+        
+        // Remove from selected transactions if in bulk selection mode
+        if (selectedTransactions.includes(transactionId)) {
+          setSelectedTransactions(selectedTransactions.filter(id => id !== transactionId))
+        }
       } else {
         // Handle HTTP errors
         const errorData = await response.json()
@@ -144,6 +160,76 @@ const ChessAdminTransactions: React.FC = () => {
     } catch (error) {
       console.error('Failed to update transaction:', error)
       alert(`Network error. Failed to ${action} transaction. Please try again.`)
+    }
+  }
+
+  const handleBulkAction = async (action: 'approve' | 'reject') => {
+    if (selectedTransactions.length === 0) {
+      alert('Please select at least one transaction')
+      return
+    }
+    
+    const confirmAction = window.confirm(
+      `Are you sure you want to ${action} ${selectedTransactions.length} transaction(s)?`
+    )
+    
+    if (!confirmAction) return
+    
+    try {
+      const results = await Promise.all(
+        selectedTransactions.map(id => 
+          fetch(`/api/admin/transactions/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              status: action === 'approve' ? 'CONFIRMED' : 'REJECTED' 
+            })
+          })
+        )
+      )
+      
+      // Check if all requests were successful
+      const allSuccessful = results.every(response => response.ok)
+      
+      if (allSuccessful) {
+        // Update all transactions in local state
+        setTransactions(transactions.map(transaction => 
+          selectedTransactions.includes(transaction.id) 
+            ? { ...transaction, status: action === 'approve' ? 'CONFIRMED' : 'REJECTED' }
+            : transaction
+        ))
+        
+        // Clear selection
+        setSelectedTransactions([])
+        setIsSelecting(false)
+        
+        alert(`Successfully ${action}d ${selectedTransactions.length} transaction(s)`)
+      } else {
+        // Handle partial failures
+        const successfulCount = results.filter(response => response.ok).length
+        alert(`Partially completed: ${successfulCount}/${selectedTransactions.length} transactions ${action}d. Please check the failed transactions.`)
+      }
+    } catch (error) {
+      console.error('Failed to perform bulk action:', error)
+      alert(`Network error. Failed to ${action} transactions. Please try again.`)
+    }
+  }
+
+  const toggleTransactionSelection = (id: string) => {
+    if (selectedTransactions.includes(id)) {
+      setSelectedTransactions(selectedTransactions.filter(transactionId => transactionId !== id))
+    } else {
+      setSelectedTransactions([...selectedTransactions, id])
+    }
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedTransactions.length === filteredTransactions.length) {
+      // Deselect all
+      setSelectedTransactions([])
+    } else {
+      // Select all visible transactions
+      setSelectedTransactions(filteredTransactions.map(transaction => transaction.id))
     }
   }
 
@@ -212,6 +298,64 @@ const ChessAdminTransactions: React.FC = () => {
               </motion.div>
             </div>
           </motion.div>
+
+          {/* Bulk Action Bar */}
+          <AnimatePresence>
+            {isSelecting && (
+              <motion.div 
+                className="glass-morphism rounded-xl p-4 border border-yellow-500/30 mb-4 flex items-center justify-between"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <div className="flex items-center space-x-4">
+                  <span className="text-white font-medium">
+                    {selectedTransactions.length} transaction(s) selected
+                  </span>
+                  <button 
+                    onClick={toggleSelectAll}
+                    className="text-sm text-yellow-400 hover:text-yellow-300"
+                  >
+                    {selectedTransactions.length === filteredTransactions.length ? 'Deselect All' : 'Select All'}
+                  </button>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <motion.button
+                    onClick={() => handleBulkAction('approve')}
+                    className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>Approve Selected</span>
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={() => handleBulkAction('reject')}
+                    className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Reject Selected</span>
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={() => {
+                      setIsSelecting(false)
+                      setSelectedTransactions([])
+                    }}
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Cancel
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -284,7 +428,7 @@ const ChessAdminTransactions: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
@@ -318,6 +462,15 @@ const ChessAdminTransactions: React.FC = () => {
                 <option value="COMPLETED">Completed</option>
                 <option value="REJECTED">Rejected</option>
               </select>
+              
+              <motion.button
+                onClick={() => setIsSelecting(!isSelecting)}
+                className={`royal-button w-full ${isSelecting ? 'bg-yellow-600 hover:bg-yellow-700' : ''}`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {isSelecting ? 'Cancel Selection' : 'Bulk Select'}
+              </motion.button>
             </div>
             
             <div className="mt-4 text-sm text-gray-400">
@@ -336,6 +489,16 @@ const ChessAdminTransactions: React.FC = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gradient-to-r from-yellow-500/20 to-yellow-600/10 border-b border-yellow-500/30">
+                    {isSelecting && (
+                      <th className="text-left p-4 font-bold text-yellow-400 w-12">
+                        <input
+                          type="checkbox"
+                          checked={selectedTransactions.length === filteredTransactions.length && filteredTransactions.length > 0}
+                          onChange={toggleSelectAll}
+                          className="h-5 w-5 text-yellow-500 rounded focus:ring-yellow-400"
+                        />
+                      </th>
+                    )}
                     <th className="text-left p-4 font-bold text-yellow-400">Transaction</th>
                     <th className="text-left p-4 font-bold text-yellow-400">Noble</th>
                     <th className="text-left p-4 font-bold text-yellow-400">Type</th>
@@ -349,12 +512,22 @@ const ChessAdminTransactions: React.FC = () => {
                   {filteredTransactions.map((transaction, index) => (
                     <motion.tr
                       key={transaction.id}
-                      className="border-b border-white/5 hover:bg-white/5 transition-all"
+                      className={`border-b border-white/5 hover:bg-white/5 transition-all ${selectedTransactions.includes(transaction.id) ? 'bg-yellow-500/10' : ''}`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                       whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
                     >
+                      {isSelecting && (
+                        <td className="p-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedTransactions.includes(transaction.id)}
+                            onChange={() => toggleTransactionSelection(transaction.id)}
+                            className="h-5 w-5 text-yellow-500 rounded focus:ring-yellow-400"
+                          />
+                        </td>
+                      )}
                       <td className="p-4">
                         <div>
                           <p className="font-bold text-white text-sm">{transaction.txHash || 'Internal'}</p>
@@ -423,7 +596,7 @@ const ChessAdminTransactions: React.FC = () => {
                             <Eye className="w-4 h-4" />
                           </motion.button>
                           
-                          {transaction.status === 'PENDING' && (
+                          {transaction.status === 'PENDING' && !isSelecting && (
                             <>
                               <motion.button
                                 onClick={() => handleTransactionAction(transaction.id, 'approve')}

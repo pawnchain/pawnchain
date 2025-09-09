@@ -14,6 +14,7 @@ const ChessToastNotification: React.FC<ChessToastNotificationProps> = ({ notific
   useEffect(() => {
     if (notification.type !== 'error') {
       const timer = setTimeout(() => {
+        // Only auto-dismiss if the notification still exists
         onClose(notification.id)
       }, 6000)
 
@@ -117,7 +118,10 @@ const ChessToastNotification: React.FC<ChessToastNotificationProps> = ({ notific
           {/* Close Button */}
           <motion.button
             className="flex-shrink-0 p-1 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-            onClick={() => onClose(notification.id)}
+            onClick={(e) => {
+              e.stopPropagation()
+              onClose(notification.id)
+            }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             initial={{ opacity: 0 }}
