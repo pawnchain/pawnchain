@@ -160,6 +160,16 @@ export async function PATCH(
       // - No more setting deletedAt timestamp
       // - No more setting isActive to false
       // - No more renaming username/walletAddress to withdrawn_[userId]
+      
+      // MARK: Added flag to indicate user has completed a withdrawal
+      await prisma.user.update({
+        where: { id: transaction.userId },
+        data: { 
+          hasCompletedWithdrawal: true,
+          // Keep user active so they can join new triangles
+          isActive: true
+        }
+      })
 
       // Mark all user transactions as consolidated
       await prisma.transaction.updateMany({

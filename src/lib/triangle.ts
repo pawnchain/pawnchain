@@ -208,10 +208,10 @@ export async function handleTriangleCompletion(triangleId: string) {
         }
       })
     }
-
-    // Start triangle cycling process
-    await cycleTriangle(triangleId)
   }
+
+  // Start triangle cycling process
+  await cycleTriangle(triangleId)
 }
 
 export async function cycleTriangle(triangleId: string) {

@@ -15,12 +15,17 @@ const WithdrawalProcessing: React.FC = () => {
   useEffect(() => {
     // Check if user should be on this page
     if (!user || !user.hasPendingWithdrawal) {
+      // If user has completed a withdrawal, redirect to dashboard to show join triangle option
+      if (user && user.hasCompletedWithdrawal) {
+        router.push('/dashboard')
+        return
+      }
       router.push('/dashboard')
       return
     }
 
-    // Redirect to login if user account is deleted (old logic)
-    if (user && (user.deletedAt || !user.isActive)) {
+    // Redirect to login ONLY if user account is deleted AND they haven't completed a withdrawal
+    if (user && (user.deletedAt || !user.isActive) && !user.hasCompletedWithdrawal) {
       logout()
       router.push('/login')
       return
