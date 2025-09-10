@@ -4,8 +4,8 @@ export interface User {
   email?: string | null
   walletAddress: string
   plan: PlanType
-  trianglePosition?: number
-  triangleId?: string
+  trianglePosition?: number | null
+  triangleId?: string | null
   trianglePositions?: Position[]
   referralCode: string
   uplineId?: string

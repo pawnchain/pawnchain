@@ -63,7 +63,18 @@ export async function GET(request: NextRequest) {
         // MARK: Added flag to indicate if user has completed a withdrawal
         hasCompletedWithdrawal: userWithTransactions?.transactions?.some(tx => tx.status === 'COMPLETED') || false
       }
-      
+
+      // Ensure trianglePosition is properly formatted
+      if (userWithWithdrawalStatus.trianglePosition && typeof userWithWithdrawalStatus.trianglePosition === 'object') {
+        // If trianglePosition is a complex object, we need to simplify it
+        if (userWithWithdrawalStatus.trianglePosition.id) {
+          // Keep only the position number for client-side use
+          userWithWithdrawalStatus.trianglePosition = userWithWithdrawalStatus.trianglePosition.position || 0;
+        } else {
+          userWithWithdrawalStatus.trianglePosition = null;
+        }
+      }
+
       console.log('Session API - returning user:', userWithWithdrawalStatus.username, 'isAdmin:', userWithWithdrawalStatus.isAdmin)
       return NextResponse.json({ user: userWithWithdrawalStatus })
     }

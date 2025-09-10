@@ -105,6 +105,11 @@ export async function POST(request: NextRequest) {
       createdAt: user.createdAt
     }
 
+    // Ensure trianglePosition is properly serialized
+    if (sessionUser.trianglePosition && typeof sessionUser.trianglePosition !== 'object') {
+      sessionUser.trianglePosition = null;
+    }
+
     // Create a session token
     const sessionToken = jwt.sign(
       { user: sessionUser },
