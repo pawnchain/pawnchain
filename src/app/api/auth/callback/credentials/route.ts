@@ -95,7 +95,16 @@ export async function POST(request: NextRequest) {
       email: user.email,
       walletAddress: user.walletAddress,
       plan: user.plan,
-      trianglePosition: user.trianglePosition?.[0] || undefined,
+      trianglePosition: user.trianglePosition?.[0] ? {
+        id: user.trianglePosition[0].id,
+        triangleId: user.trianglePosition[0].triangleId,
+        userId: user.trianglePosition[0].userId,
+        level: user.trianglePosition[0].level,
+        position: user.trianglePosition[0].position,
+        positionKey: user.trianglePosition[0].positionKey,
+        createdAt: user.trianglePosition[0].createdAt,
+        updatedAt: user.trianglePosition[0].updatedAt
+      } : undefined,
       triangleId: user.trianglePosition?.[0]?.triangleId || null,
       referralCode: user.referralCode,
       uplineId: user.uplineId,
