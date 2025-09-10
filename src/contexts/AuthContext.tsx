@@ -82,7 +82,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (!response.ok) {
         console.error('Login failed with status:', response.status, data)
-        throw new Error(data.error || 'Authentication failed')
+        // Properly handle the error without throwing an exception that could crash the UI
+        return false
       }
       
       // If the login response includes user data, use it directly
@@ -139,7 +140,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error("Login error:", error)
-      throw error
+      // Return false instead of throwing to prevent UI crashes
+      return false
     }
   }
 
@@ -191,20 +193,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const adminLogin = async (username: string, password: string): Promise<boolean> => {
-    const result = await login(username, password)
-    if (!result) return false
+    try {
+      const result = await login(username, password)
+      if (!result) return false
 
-    const sessionResponse = await fetch('/api/auth/session')
-    const session = await sessionResponse.json()
-    if (session.user?.isAdmin) {
-      setIsAdmin(true)
-      localStorage.setItem('forgechain_admin', 'true')
-      return true
+      const sessionResponse = await fetch('/api/auth/session')
+      const session = await sessionResponse.json()
+      if (session.user?.isAdmin) {
+        setIsAdmin(true)
+        localStorage.setItem('forgechain_admin', 'true')
+        return true
+      }
+
+      // Not an admin: immediately sign out to avoid logging in as normal user from admin form
+      await logout()
+      // Return false instead of throwing an error to prevent UI crashes
+      return false
+    } catch (error) {
+      console.error("Admin login error:", error)
+      // Return false instead of throwing to prevent UI crashes
+      return false
     }
-
-    // Not an admin: immediately sign out to avoid logging in as normal user from admin form
-    await logout()
-    throw new Error('You are not an admin')
   }
 
   const logout = async () => {

@@ -50,7 +50,7 @@ const ChessLoginForm: React.FC<ChessLoginFormProps> = ({ onNavigate }) => {
             type: 'success',
             read: false,
           })
-          
+        
           // Check if there's a pending deposit that needs to be shown
           const pendingDeposit = localStorage.getItem('pending_deposit')
           if (pendingDeposit) {
@@ -66,9 +66,9 @@ const ChessLoginForm: React.FC<ChessLoginFormProps> = ({ onNavigate }) => {
       if (!success) {
         const attempts = localStorage.getItem('login_attempts') ? 
           parseInt(localStorage.getItem('login_attempts') || '0') : 0
-        
+      
         localStorage.setItem('login_attempts', (attempts + 1).toString())
-        
+      
         if (attempts >= 4) {
           addNotification({
             userId: 'system',
@@ -90,6 +90,7 @@ const ChessLoginForm: React.FC<ChessLoginFormProps> = ({ onNavigate }) => {
         localStorage.removeItem('login_attempts')
       }
     } catch (error: any) {
+      console.error("Login form error:", error)
       const errorMessage = error?.message || 'The castle gates remain closed'
       
       addNotification({
