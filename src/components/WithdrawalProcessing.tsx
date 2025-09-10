@@ -22,7 +22,8 @@ const WithdrawalProcessing: React.FC = () => {
     // Redirect to register page if user account is deleted (withdrawal completed)
     if (user && (user.deletedAt || !user.isActive)) {
       logout()
-      router.push('/register')
+      // Dispatch navigation event instead of router.push
+      window.dispatchEvent(new CustomEvent('navigate', { detail: 'register' }))
       return
     }
 
