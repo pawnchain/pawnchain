@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
         hasPendingWithdrawal: userWithTransactions?.transactions && userWithTransactions.transactions.length > 0,
         withdrawalTransaction: userWithTransactions?.transactions?.[0] || null,
         // MARK: Added flag to indicate if user has completed a withdrawal
-        hasCompletedWithdrawal: user?.hasCompletedWithdrawal || userWithTransactions?.transactions?.some(tx => tx.status === 'COMPLETED') || false
+        hasCompletedWithdrawal: userWithTransactions?.transactions?.some(tx => tx.status === 'COMPLETED') || false
       }
 
       // Ensure trianglePosition is properly formatted

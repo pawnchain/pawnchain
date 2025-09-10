@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Eye, EyeOff, User, Lock, Wallet, Crown, Shield, Sword, Castle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -24,9 +24,33 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
   const [isLoading, setIsLoading] = useState(false)
   const [referrerInfo, setReferrerInfo] = useState<{username: string; planType: string} | null>(null)
   const [isReferralCodeLocked, setIsReferralCodeLocked] = useState(false)
+  const [isRejoiningUser, setIsRejoiningUser] = useState(false) // New state to track rejoining users
 
   const { register } = useAuth()
   const { addNotification } = useNotifications()
+
+  // Check if user is rejoining after withdrawal
+  useEffect(() => {
+    // Check for rejoining user data in localStorage
+    const rejoinData = localStorage.getItem('rejoin_user_data')
+    if (rejoinData) {
+      try {
+        const userData = JSON.parse(rejoinData)
+        setIsRejoiningUser(true)
+        // Prefill the form with user data
+        setFormData(prev => ({
+          ...prev,
+          username: userData.username || '',
+          walletAddress: userData.walletAddress || '',
+          plan: userData.plan || 'King'
+        }))
+        // Remove the data from localStorage after using it
+        localStorage.removeItem('rejoin_user_data')
+      } catch (e) {
+        console.error('Error parsing rejoin data:', e)
+      }
+    }
+  }, [])
 
   const handleReferralCodeChange = async (code: string) => {
     setFormData({ ...formData, referralCode: code })
@@ -223,7 +247,7 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
       </div>
 
       <motion.div 
-        className="relative max-w-2xl w-full"
+        className="relative max-w-4xl w-full"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
@@ -248,133 +272,84 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
                 ease: "easeInOut"
               }}
             >
-              ⚔️
+              {isRejoiningUser ? '♞' : '♘'}
             </motion.div>
-            <h1 className="text-3xl font-bold gradient-text mb-2">Join the Royal Army</h1>
-            <p className="text-gray-400">Choose your rank and begin your conquest</p>
+            <h1 className="text-3xl font-bold gradient-text mb-2">
+              {isRejoiningUser ? 'Welcome Back, Knight' : 'Join the Royal Army'}
+            </h1>
+            <p className="text-gray-400">
+              {isRejoiningUser 
+                ? 'Continue your conquest in the ForgeChain kingdom' 
+                : 'Embark on your journey to financial sovereignty'}
+            </p>
+            
+            {/* Show special message for rejoining users */}
+            {isRejoiningUser && (
+              <motion.div 
+                className="mt-4 p-3 bg-gradient-to-r from-yellow-500/20 to-green-500/20 border border-yellow-500/30 rounded-lg inline-block"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <p className="text-yellow-300 text-sm">
+                  Welcome back! You can now join a new triangle formation.
+                </p>
+              </motion.div>
+            )}
           </motion.div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Knight Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <input
-                    type="text"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-white placeholder-gray-400 transition-all"
-                    placeholder="Choose your knight name"
-                    required
-                  />
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Treasury Vault Address
-                </label>
-                <div className="relative">
-                  <Wallet className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <input
-                    type="text"
-                    value={formData.walletAddress}
-                    onChange={(e) => setFormData({ ...formData, walletAddress: e.target.value })}
-                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-white placeholder-gray-400 transition-all"
-                    placeholder="0x... or T..."
-                    required
-                  />
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Plan Selection */}
+            {/* Username */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
             >
-              <label className="block text-sm font-medium text-gray-300 mb-4">
-                Choose Your Rank {referrerInfo && <span className="text-yellow-400">(Aligned with sponsor: {referrerInfo.username})</span>}
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Knight Name
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {plans.map((plan, index) => (
-                  <motion.button
-                    key={plan.name}
-                    type="button"
-                    onClick={() => !isReferralCodeLocked && setFormData({ ...formData, plan: plan.name })}
-                    disabled={isReferralCodeLocked}
-                    className={`relative p-6 border-2 rounded-xl transition-all duration-300 ${
-                      formData.plan === plan.name
-                        ? 'border-yellow-500 bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 shadow-lg'
-                        : isReferralCodeLocked
-                        ? 'border-gray-600 bg-gray-800/50 cursor-not-allowed opacity-60'
-                        : 'border-white/20 hover:border-white/40 hover:bg-white/5'
-                    }`}
-                    whileHover={!isReferralCodeLocked ? { scale: 1.02, y: -2 } : {}}
-                    whileTap={!isReferralCodeLocked ? { scale: 0.98 } : {}}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.7 + index * 0.1 }}
-                  >
-                    <div className="text-center">
-                      <div className={`text-4xl mb-3 ${isReferralCodeLocked && formData.plan !== plan.name ? 'opacity-50' : ''}`}>
-                        {plan.piece}
-                      </div>
-                      <div className={`font-bold text-lg mb-2 ${isReferralCodeLocked && formData.plan !== plan.name ? 'opacity-50' : 'text-white'}`}>
-                        {plan.name}
-                      </div>
-                      <div className={`text-2xl font-bold mb-2 ${isReferralCodeLocked && formData.plan !== plan.name ? 'opacity-50' : 'text-yellow-400'}`}>
-                        {plan.price} ETH
-                      </div>
-                      <div className={`text-xs text-gray-400 mb-3 ${isReferralCodeLocked && formData.plan !== plan.name ? 'opacity-50' : ''}`}>
-                        {plan.description}
-                      </div>
-                      <div className="space-y-1">
-                        {plan.benefits.map((benefit, i) => (
-                          <div key={i} className={`text-xs ${isReferralCodeLocked && formData.plan !== plan.name ? 'opacity-50 text-gray-500' : 'text-gray-300'}`}>
-                            • {benefit}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    {formData.plan === plan.name && (
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-yellow-600/10 rounded-xl"
-                        layoutId="selectedPlan"
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      />
-                    )}
-                  </motion.button>
-                ))}
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type="text"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-white placeholder-gray-400 transition-all"
+                  placeholder="Choose your knight name"
+                  required
+                />
               </div>
-              {isReferralCodeLocked && (
-                <motion.p 
-                  className="text-sm text-yellow-400 mt-3 text-center"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  ⚔️ Rank automatically aligned with your sponsor's battalion
-                </motion.p>
-              )}
             </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Wallet Address */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Treasury Key (Wallet Address)
+              </label>
+              <div className="relative">
+                <Wallet className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type="text"
+                  value={formData.walletAddress}
+                  onChange={(e) => setFormData({ ...formData, walletAddress: e.target.value })}
+                  className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-white placeholder-gray-400 transition-all"
+                  placeholder="Your crypto wallet address"
+                  required
+                />
+              </div>
+            </motion.div>
+
+            {/* Password Fields - Always show for new registration */}
+            <>
+              {/* Password */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8 }}
+                transition={{ delay: 0.6 }}
               >
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Secret Passphrase
@@ -386,7 +361,7 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="w-full pl-12 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-white placeholder-gray-400 transition-all"
-                    placeholder="Create your secret phrase"
+                    placeholder="Create your secret passphrase"
                     required
                   />
                   <motion.button
@@ -401,13 +376,14 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
                 </div>
               </motion.div>
 
+              {/* Confirm Password */}
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.9 }}
+                transition={{ delay: 0.7 }}
               >
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Confirm Passphrase
+                  Confirm Secret Passphrase
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -415,63 +391,115 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
                     type={showPassword ? 'text' : 'password'}
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-white placeholder-gray-400 transition-all"
-                    placeholder="Confirm your secret phrase"
+                    className="w-full pl-12 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-white placeholder-gray-400 transition-all"
+                    placeholder="Confirm your secret passphrase"
                     required
                   />
                 </div>
               </motion.div>
-            </div>
+            </>
 
+            {/* Plan Selection */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.0 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.8 }}
             >
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Sponsor Code (Optional)
+                Kingdom Tier
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {plans.map((plan, index) => (
+                  <motion.div
+                    key={plan.name}
+                    className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
+                      formData.plan === plan.name
+                        ? `border-yellow-500 bg-gradient-to-br ${plan.color} bg-opacity-20`
+                        : 'border-white/20 bg-white/5 hover:border-white/40'
+                    }`}
+                    onClick={() => setFormData({ ...formData, plan: plan.name })}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.9 + index * 0.1 }}
+                  >
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className={`p-2 rounded-lg bg-gradient-to-br ${plan.color}`}>
+                        <plan.icon className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-white">{plan.name}</h3>
+                        <p className="text-sm text-gray-400">{plan.price} USDT</p>
+                      </div>
+                    </div>
+                    <div className="text-center text-2xl mb-2">{plan.piece}</div>
+                    <p className="text-xs text-gray-400 mb-3">{plan.description}</p>
+                    <ul className="text-xs space-y-1">
+                      {plan.benefits.map((benefit, idx) => (
+                        <li key={idx} className="flex items-center text-gray-300">
+                          <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full mr-2"></div>
+                          {benefit}
+                        </li>
+                      ))}
+                    </ul>
+                    {formData.plan === plan.name && (
+                      <motion.div 
+                        className="absolute top-2 right-2 text-yellow-500"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                      >
+                        <Crown className="h-5 w-5" />
+                      </motion.div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Referral Code */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 1.3 }}
+            >
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Noble Sponsor (Optional)
               </label>
               <div className="relative">
-                <Crown className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <input
                   type="text"
                   value={formData.referralCode}
                   onChange={(e) => handleReferralCodeChange(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-white placeholder-gray-400 transition-all"
-                  placeholder="Enter sponsor's code"
+                  placeholder="Enter sponsor's name, ID, or code"
+                  disabled={isReferralCodeLocked}
                 />
-                {referrerInfo && (
-                  <motion.div 
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                  >
-                    <div className="bg-green-500/20 text-green-400 text-xs px-3 py-1 rounded-full border border-green-500/30">
-                      ✓ {referrerInfo.username}
-                    </div>
-                  </motion.div>
-                )}
               </div>
               {referrerInfo && (
-                <motion.p 
-                  className="text-sm text-green-400 mt-2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                <motion.div 
+                  className="mt-2 p-3 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-lg"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
                 >
-                  🛡️ Noble sponsor verified: {referrerInfo.username} ({referrerInfo.planType} battalion)
-                </motion.p>
+                  <p className="text-sm text-blue-300">
+                    Sponsored by <span className="font-bold">{referrerInfo.username}</span> ({referrerInfo.planType})
+                  </p>
+                </motion.div>
               )}
             </motion.div>
 
+            {/* Submit Button */}
             <motion.button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-black py-4 rounded-lg font-bold hover:from-yellow-400 hover:to-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg text-lg"
+              className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-black py-3 rounded-lg font-bold hover:from-yellow-400 hover:to-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg"
               whileHover={{ scale: 1.02, boxShadow: "0 0 30px rgba(212, 175, 55, 0.5)" }}
               whileTap={{ scale: 0.98 }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.1 }}
+              transition={{ delay: 1.4 }}
             >
               {isLoading ? (
                 <motion.div
@@ -480,38 +508,39 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
                   animate={{ opacity: 1 }}
                 >
                   <motion.div
-                    className="w-6 h-6 border-2 border-black border-t-transparent rounded-full"
+                    className="w-5 h-5 border-2 border-black border-t-transparent rounded-full"
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                   />
-                  <span>Forging Your Destiny...</span>
+                  <span>{isRejoiningUser ? 'Rejoining Kingdom...' : 'Joining Army...'}</span>
                 </motion.div>
               ) : (
                 <span className="flex items-center justify-center space-x-2">
-                  <Sword className="h-5 w-5" />
-                  <span>Claim Your Throne</span>
+                  <Shield className="h-5 w-5" />
+                  <span>{isRejoiningUser ? 'Continue Conquest' : 'Swear Allegiance'}</span>
                 </span>
               )}
             </motion.button>
-          </form>
 
-          <motion.div 
-            className="text-center pt-6 border-t border-white/10 mt-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2 }}
-          >
-            <p className="text-gray-400 mb-3">
-              Already sworn allegiance to the realm?
-            </p>
-            <motion.button
-              onClick={() => onNavigate('login')}
-              className="text-yellow-400 hover:text-yellow-300 font-medium transition-colors"
-              whileHover={{ scale: 1.05 }}
+            {/* Login Link */}
+            <motion.div 
+              className="text-center pt-4 border-t border-white/10"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5 }}
             >
-              Return to Your Castle →
-            </motion.button>
-          </motion.div>
+              <p className="text-gray-400 mb-3">
+                Already sworn allegiance to the realm?
+              </p>
+              <motion.button
+                onClick={() => onNavigate('login')}
+                className="text-yellow-400 hover:text-yellow-300 font-medium transition-colors"
+                whileHover={{ scale: 1.05 }}
+              >
+                Enter the Kingdom →
+              </motion.button>
+            </motion.div>
+          </form>
         </div>
       </motion.div>
     </div>

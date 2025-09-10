@@ -45,7 +45,12 @@ export async function GET(
       amount: transaction.amount,
       status: transaction.status,
       closable: true,
-      deleteAccount: false
+      deleteAccount: false,
+      // Include user data for rejoining flow
+      user: transaction.user ? {
+        username: transaction.user.username,
+        walletAddress: transaction.user.walletAddress
+      } : null
     }
     
     switch (transaction.status) {
@@ -60,6 +65,18 @@ export async function GET(
         // MARK: Updated message for completed withdrawals
         response.message = 'Your withdrawal has been completed! You can now join a new triangle formation.'
         response.showJoinTriangle = true // New flag to show join triangle option
+        
+        // Include rejoin data for completed withdrawals
+        try {
+          if (transaction.type === 'WITHDRAWAL' && transaction.metadata) {
+            const metadata = transaction.metadata as any;
+            if (metadata.rejoinData) {
+              response.rejoinData = metadata.rejoinData;
+            }
+          }
+        } catch (e) {
+          console.error('Error processing rejoin data:', e);
+        }
         break
       case 'REJECTED':
         response.message = 'Your transaction has been rejected.'

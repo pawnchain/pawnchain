@@ -16,6 +16,11 @@ interface TransactionStatus {
   deleteAccount: boolean
   showJoinTriangle?: boolean
   rejectionReason?: string
+  rejoinData?: {
+    username: string
+    walletAddress: string
+    plan: string
+  }
 }
 
 interface ChessTransactionModalProps {
@@ -80,7 +85,7 @@ const ChessTransactionModal: React.FC<ChessTransactionModalProps> = ({
             type: 'info',
             read: false
           })
-          
+        
           await logout()
           window.dispatchEvent(new CustomEvent('navigate', { detail: 'register' }))
         } else {
@@ -95,6 +100,17 @@ const ChessTransactionModal: React.FC<ChessTransactionModalProps> = ({
           read: false
         })
       }
+    } else if (status.showJoinTriangle) {
+      // For completed withdrawals, store rejoin data and redirect to register page for new account
+      if (status.rejoinData) {
+        try {
+          localStorage.setItem('rejoin_user_data', JSON.stringify(status.rejoinData))
+        } catch (e) {
+          console.error('Error storing rejoin data:', e)
+        }
+      }
+      await logout()
+      window.dispatchEvent(new CustomEvent('navigate', { detail: 'register' }))
     } else {
       onClose?.()
     }

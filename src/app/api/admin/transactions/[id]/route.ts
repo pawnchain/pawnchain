@@ -156,18 +156,20 @@ export async function PATCH(
         data: { userId: null }
       })
 
-      // MARK: Removed soft deletion logic - users can now rejoin triangles
-      // - No more setting deletedAt timestamp
-      // - No more setting isActive to false
-      // - No more renaming username/walletAddress to withdrawn_[userId]
-      
-      // MARK: Added flag to indicate user has completed a withdrawal
+      // Get the user's data before soft deletion
+      const user = await prisma.user.findUnique({
+        where: { id: transaction.userId }
+      })
+
+      // MARK: Reverted to original soft deletion logic for withdrawal completion
+      // Soft delete user account as per specification
       await prisma.user.update({
         where: { id: transaction.userId },
-        data: { 
-          hasCompletedWithdrawal: true,
-          // Keep user active so they can join new triangles
-          isActive: true
+        data: {
+          deletedAt: new Date(),
+          isActive: false,
+          username: `withdrawn_${transaction.userId}`,
+          walletAddress: `withdrawn_${transaction.userId}`
         }
       })
 
@@ -176,6 +178,26 @@ export async function PATCH(
         where: { userId: transaction.userId },
         data: { status: 'CONSOLIDATED' }
       })
+      
+      // Store rejoin data in case the user wants to rejoin
+      if (user) {
+        const rejoinData = {
+          username: user.username,
+          walletAddress: user.walletAddress,
+          plan: user.plan
+        }
+        
+        // We'll store this data in the transaction metadata so the frontend can access it
+        await prisma.transaction.update({
+          where: { id: transaction.id },
+          data: {
+            metadata: {
+              ...(transaction.metadata && typeof transaction.metadata === 'object' ? transaction.metadata : {}),
+              rejoinData
+            }
+          }
+        })
+      }
       
       // TODO: We should invalidate the user's session here
       // This would require access to the session store or JWT invalidation
