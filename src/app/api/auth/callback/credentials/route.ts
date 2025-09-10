@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       email: user.email,
       walletAddress: user.walletAddress,
       plan: user.plan,
-      trianglePosition: user.trianglePosition?.[0] || null,
+      trianglePosition: user.trianglePosition?.[0] || undefined,
       triangleId: user.trianglePosition?.[0]?.triangleId || null,
       referralCode: user.referralCode,
       uplineId: user.uplineId,
