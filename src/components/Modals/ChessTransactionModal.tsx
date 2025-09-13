@@ -111,6 +111,7 @@ const ChessTransactionModal: React.FC<ChessTransactionModalProps> = ({
             plan: status.rejoinData.plan || 'King'
           };
           localStorage.setItem('rejoin_user_data', JSON.stringify(rejoinData))
+          console.log('Stored rejoin data in localStorage:', rejoinData); // Debug log
         } catch (e) {
           console.error('Error storing rejoin data:', e)
         }

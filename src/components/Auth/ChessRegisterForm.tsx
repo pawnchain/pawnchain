@@ -22,7 +22,7 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
   })
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [referrerInfo, setReferrerInfo] = useState<{username: string; planType: string} | null>(null)
+  const [referrerInfo, setReferrerInfo] = useState<{username: string; plan: string} | null>(null)
   const [isReferralCodeLocked, setIsReferralCodeLocked] = useState(false)
   const [isRejoiningUser, setIsRejoiningUser] = useState(false) // New state to track rejoining users
 
@@ -36,7 +36,7 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
     if (rejoinData) {
       try {
         const userData = JSON.parse(rejoinData)
-        console.log('Rejoin data found:', userData) // Debug log
+        console.log('Rejoin data found in ChessRegisterForm:', userData) // Debug log
         setIsRejoiningUser(true)
         // Prefill the form with user data
         setFormData(prev => ({
@@ -47,6 +47,7 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
         }))
         // Remove the data from localStorage after using it
         localStorage.removeItem('rejoin_user_data')
+        console.log('Removed rejoin data from localStorage') // Debug log
       } catch (e) {
         console.error('Error parsing rejoin data:', e)
       }
@@ -69,10 +70,10 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
         if (response.ok) {
           const data = await response.json()
           console.log('Referrer data for registration:', data); // Debug log
-          setReferrerInfo(data)
+          setReferrerInfo(data) // The API returns the correct structure now
           setIsReferralCodeLocked(true)
           
-          // The API returns the plan directly, not nested in referrer object
+          // The API returns the plan directly
           if (data.plan) {
             setFormData(prev => ({ ...prev, plan: data.plan, referralCode: code }))
             
@@ -494,7 +495,7 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
                   animate={{ opacity: 1, y: 0 }}
                 >
                   <p className="text-sm text-blue-300">
-                    Sponsored by <span className="font-bold">{referrerInfo.username}</span> ({referrerInfo.planType})
+                    Sponsored by <span className="font-bold">{referrerInfo.username}</span> ({referrerInfo.plan})
                   </p>
                 </motion.div>
               )}

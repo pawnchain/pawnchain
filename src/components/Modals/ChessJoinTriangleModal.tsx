@@ -75,6 +75,7 @@ const ChessJoinTriangleModal: React.FC<ChessJoinTriangleModalProps> = ({
         // If referrer has a specific plan, auto-select it
         if (data.plan) {
           setSelectedPlan(data.plan)
+          console.log('Auto-selected plan:', data.plan); // Debug log
         }
       } else {
         setReferrerInfo(null)
