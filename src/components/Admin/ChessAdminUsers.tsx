@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, Search, Filter, Crown, Shield, Sword, Castle, Edit, Trash2, Eye } from 'lucide-react'
+import { Users, Search, Filter, Crown, Shield, Sword, Castle, Edit, Trash2, Eye, CheckSquare, Square } from 'lucide-react'
 
 interface User {
   id: string
@@ -27,6 +27,8 @@ const ChessAdminUsers: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState('all')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showUserModal, setShowUserModal] = useState(false)
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]) // For bulk selection
+  const [isSelecting, setIsSelecting] = useState(false) // Toggle bulk selection mode
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -112,6 +114,62 @@ const ChessAdminUsers: React.FC = () => {
     }
   }
 
+  // Handle bulk user selection
+  const toggleUserSelection = (userId: string) => {
+    if (selectedUsers.includes(userId)) {
+      setSelectedUsers(selectedUsers.filter(id => id !== userId))
+    } else {
+      setSelectedUsers([...selectedUsers, userId])
+    }
+  }
+
+  // Select all users in current view
+  const selectAllUsers = () => {
+    if (selectedUsers.length === filteredUsers.length) {
+      // If all are selected, deselect all
+      setSelectedUsers([])
+    } else {
+      // Select all users in current view
+      setSelectedUsers(filteredUsers.map(user => user.id))
+    }
+  }
+
+  // Handle bulk delete action
+  const handleBulkDelete = async () => {
+    if (selectedUsers.length === 0) {
+      alert('Please select at least one user to delete')
+      return
+    }
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ${selectedUsers.length} user(s)? This action cannot be undone.`
+    )
+    
+    if (!confirmDelete) return
+
+    try {
+      const response = await fetch('/api/admin/users/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: selectedUsers })
+      })
+
+      if (response.ok) {
+        // Remove deleted users from the list
+        setUsers(users.filter(user => !selectedUsers.includes(user.id)))
+        setSelectedUsers([]) // Clear selection
+        setIsSelecting(false) // Exit selection mode
+        alert(`Successfully deleted ${selectedUsers.length} user(s)`)
+      } else {
+        const errorData = await response.json()
+        alert(`Failed to delete users: ${errorData.error}`)
+      }
+    } catch (error) {
+      console.error('Failed to delete users:', error)
+      alert('Network error while deleting users')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen relative">
@@ -178,7 +236,7 @@ const ChessAdminUsers: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
@@ -212,10 +270,43 @@ const ChessAdminUsers: React.FC = () => {
                 <option value="pending">Pending</option>
                 <option value="suspended">Suspended</option>
               </select>
+              
+              {/* Bulk Actions */}
+              <div className="flex space-x-2">
+                <motion.button
+                  onClick={() => setIsSelecting(!isSelecting)}
+                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                    isSelecting 
+                      ? 'bg-yellow-600 hover:bg-yellow-700 text-white' 
+                      : 'bg-white/10 hover:bg-white/20 text-gray-300'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {isSelecting ? 'Cancel' : 'Select'}
+                </motion.button>
+                
+                {isSelecting && (
+                  <motion.button
+                    onClick={handleBulkDelete}
+                    className="flex-1 py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    disabled={selectedUsers.length === 0}
+                  >
+                    Delete
+                  </motion.button>
+                )}
+              </div>
             </div>
             
             <div className="mt-4 text-sm text-gray-400">
               Showing {filteredUsers.length} of {(users || []).length} royal subjects
+              {isSelecting && selectedUsers.length > 0 && (
+                <span className="ml-2 text-yellow-400">
+                  {selectedUsers.length} selected
+                </span>
+              )}
             </div>
           </motion.div>
 
@@ -230,6 +321,21 @@ const ChessAdminUsers: React.FC = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gradient-to-r from-yellow-500/20 to-yellow-600/10 border-b border-yellow-500/30">
+                    {isSelecting && (
+                      <th className="text-left p-4 font-bold text-yellow-400 w-12">
+                        <motion.button
+                          onClick={selectAllUsers}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          {selectedUsers.length === filteredUsers.length && filteredUsers.length > 0 ? (
+                            <CheckSquare className="w-5 h-5 text-yellow-400" />
+                          ) : (
+                            <Square className="w-5 h-5 text-gray-400" />
+                          )}
+                        </motion.button>
+                      </th>
+                    )}
                     <th className="text-left p-4 font-bold text-yellow-400">Noble</th>
                     <th className="text-left p-4 font-bold text-yellow-400">Plan</th>
                     <th className="text-left p-4 font-bold text-yellow-400">Position</th>
@@ -243,12 +349,29 @@ const ChessAdminUsers: React.FC = () => {
                   {filteredUsers.map((user, index) => (
                     <motion.tr
                       key={user.id}
-                      className="border-b border-white/5 hover:bg-white/5 transition-all"
+                      className={`border-b border-white/5 hover:bg-white/5 transition-all ${
+                        selectedUsers.includes(user.id) ? 'bg-yellow-500/10' : ''
+                      }`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                       whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
                     >
+                      {isSelecting && (
+                        <td className="p-4">
+                          <motion.button
+                            onClick={() => toggleUserSelection(user.id)}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            {selectedUsers.includes(user.id) ? (
+                              <CheckSquare className="w-5 h-5 text-yellow-400" />
+                            ) : (
+                              <Square className="w-5 h-5 text-gray-400" />
+                            )}
+                          </motion.button>
+                        </td>
+                      )}
                       <td className="p-4">
                         <div className="flex items-center space-x-3">
                           <motion.div
