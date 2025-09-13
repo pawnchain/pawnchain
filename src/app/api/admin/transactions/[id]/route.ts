@@ -156,29 +156,11 @@ export async function PATCH(
         data: { userId: null }
       })
 
-      // Get the user's data before soft deletion
+      // Get the user's data BEFORE soft deletion
       const user = await prisma.user.findUnique({
         where: { id: transaction.userId }
       })
 
-      // MARK: Reverted to original soft deletion logic for withdrawal completion
-      // Soft delete user account as per specification
-      await prisma.user.update({
-        where: { id: transaction.userId },
-        data: {
-          deletedAt: new Date(),
-          isActive: false,
-          username: `withdrawn_${transaction.userId}`,
-          walletAddress: `withdrawn_${transaction.userId}`
-        }
-      })
-
-      // Mark all user transactions as consolidated
-      await prisma.transaction.updateMany({
-        where: { userId: transaction.userId },
-        data: { status: 'CONSOLIDATED' }
-      })
-      
       // Store rejoin data in case the user wants to rejoin
       if (user) {
         const rejoinData = {
@@ -200,6 +182,24 @@ export async function PATCH(
           }
         })
       }
+
+      // MARK: Reverted to original soft deletion logic for withdrawal completion
+      // Soft delete user account as per specification
+      await prisma.user.update({
+        where: { id: transaction.userId },
+        data: {
+          deletedAt: new Date(),
+          isActive: false,
+          username: `withdrawn_${transaction.userId}`,
+          walletAddress: `withdrawn_${transaction.userId}`
+        }
+      })
+
+      // Mark all user transactions as consolidated
+      await prisma.transaction.updateMany({
+        where: { userId: transaction.userId },
+        data: { status: 'CONSOLIDATED' }
+      })
       
       // TODO: We should invalidate the user's session here
       // This would require access to the session store or JWT invalidation
