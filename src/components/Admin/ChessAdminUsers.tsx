@@ -290,23 +290,23 @@ const ChessAdminUsers: React.FC = () => {
               >
                 <option value="all">All Positions</option>
                 <option value="no-position">No Position</option>
-                <option value="1">Position 1</option>
-                <option value="2">Position 2</option>
-                <option value="3">Position 3</option>
-                <option value="4">Position 4</option>
-                <option value="5">Position 5</option>
-                <option value="6">Position 6</option>
-                <option value="7">Position 7</option>
-                <option value="8">Position 8</option>
-                <option value="9">Position 9</option>
-                <option value="10">Position 10</option>
-                <option value="11">Position 11</option>
-                <option value="12">Position 12</option>
-                <option value="13">Position 13</option>
-                <option value="14">Position 14</option>
-                <option value="15">Position 15</option>
+                <option value="A">Position A (Level 1)</option>
+                <option value="AB1">Position AB1 (Level 2)</option>
+                <option value="AB2">Position AB2 (Level 2)</option>
+                <option value="B1C1">Position B1C1 (Level 3)</option>
+                <option value="B1C2">Position B1C2 (Level 3)</option>
+                <option value="B2C1">Position B2C1 (Level 3)</option>
+                <option value="B2C2">Position B2C2 (Level 3)</option>
+                <option value="C1D1">Position C1D1 (Level 4)</option>
+                <option value="C1D2">Position C1D2 (Level 4)</option>
+                <option value="C2D1">Position C2D1 (Level 4)</option>
+                <option value="C2D2">Position C2D2 (Level 4)</option>
+                <option value="C3D1">Position C3D1 (Level 4)</option>
+                <option value="C3D2">Position C3D2 (Level 4)</option>
+                <option value="C4D1">Position C4D1 (Level 4)</option>
+                <option value="C4D2">Position C4D2 (Level 4)</option>
               </select>
-              
+
               {/* Bulk Actions */}
               <div className="flex space-x-2">
                 <motion.button

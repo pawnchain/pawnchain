@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
         nonDeletedUsers = nonDeletedUsers.filter(user => 
           user.trianglePosition && 
           user.trianglePosition.length > 0 && 
-          user.trianglePosition[0].positionKey === parseInt(position)
+          user.trianglePosition[0].positionKey === position
         );
       }
     }
