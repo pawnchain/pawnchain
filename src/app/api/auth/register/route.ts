@@ -54,6 +54,76 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Check if the existing user is soft deleted (withdrawn)
+    if (existingUser && existingUser.deletedAt && existingUser.username.startsWith('withdrawn_')) {
+      // This is a rejoining user, restore their account
+      console.log('Restoring account for rejoining user:', existingUser.username)
+      
+      // Generate a new password if not provided (for rejoining users)
+      const passwordToUse = password || 'rejoin-placeholder-password';
+      const hashedPassword = await bcrypt.hash(passwordToUse, 12)
+      
+      // Restore the user account
+      const restoredUser = await prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
+          username,
+          walletAddress,
+          password: hashedPassword,
+          deletedAt: null,
+          isActive: true,
+          status: 'PENDING',
+          plan: planType as any
+        }
+      })
+      
+      console.log('User account restored successfully:', restoredUser.username)
+      
+      // Generate deposit information
+      const plan = await prisma.plan.findUnique({
+        where: { name: planType as any }
+      })
+      
+      if (!plan) {
+        return NextResponse.json(
+          { message: 'Plan not found' },
+          { status: 400 }
+        )
+      }
+      
+      const depositInfo = {
+        transactionId: `DP${Date.now()}`,
+        amount: plan.price,
+        coin: 'USDT',
+        network: 'TRC20',
+        walletAddress: process.env.CRYPTO_WALLET_ADDRESS || 'TBD...',
+        positionId: restoredUser.id,
+        positionKey: restoredUser.referralCode
+      }
+      
+      // Create pending deposit transaction
+      await prisma.transaction.create({
+        data: {
+          userId: restoredUser.id,
+          type: 'DEPOSIT',
+          amount: plan.price,
+          status: 'PENDING',
+          transactionId: depositInfo.transactionId,
+          description: `Re-joining deposit for ${planType} plan`,
+          metadata: depositInfo
+        }
+      })
+      
+      console.log('Re-joining deposit transaction created for user:', restoredUser.username)
+      
+      return NextResponse.json({ 
+        success: true,
+        message: 'Account restored successfully',
+        deposit: depositInfo
+      })
+    }
+    
+    // For regular users, reject if username or wallet address already exists
     if (existingUser) {
       console.log('User already exists:', existingUser.username)
       return NextResponse.json(
