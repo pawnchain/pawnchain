@@ -49,23 +49,25 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // Soft delete users - mark as inactive
-    const result = await prisma.user.updateMany({
-      where: {
-        id: {
-          in: userIds
+    // Soft delete users - mark with deletedAt timestamp (same as withdrawal completion)
+    for (const userId of userIds) {
+      await prisma.user.update({
+        where: { 
+          id: userId,
+          isAdmin: false // Ensure we don't delete admin users
         },
-        isAdmin: false // Ensure we don't delete admin users
-      },
-      data: {
-        isActive: false,
-        loginAttempts: 5 // Set to max to indicate suspension
-      }
-    })
+        data: {
+          deletedAt: new Date(),
+          isActive: false,
+          username: `deleted_${userId}`,
+          walletAddress: `deleted_${userId}`
+        }
+      })
+    }
     
     return NextResponse.json({ 
       success: true, 
-      message: `Successfully deleted ${result.count} users` 
+      message: `Successfully deleted ${userIds.length} users` 
     })
   } catch (error) {
     console.error('Error bulk deleting users:', error)

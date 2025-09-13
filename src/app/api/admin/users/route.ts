@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || ''
     const plan = searchParams.get('plan') || 'all'
     const status = searchParams.get('status') || 'all'
+    const position = searchParams.get('position') || 'all' // Add position filter
     
     // Build where clause - exclude deleted users
     const where: any = {
@@ -94,7 +95,22 @@ export async function GET(request: NextRequest) {
     })
     
     // Filter out deleted users manually (workaround for MongoDB null issue)
-    const nonDeletedUsers = users.filter(user => !user.deletedAt)
+    let nonDeletedUsers = users.filter(user => !user.deletedAt)
+    
+    // Apply position filter after fetching
+    if (position && position !== 'all') {
+      if (position === 'no-position') {
+        // Filter users with no position
+        nonDeletedUsers = nonDeletedUsers.filter(user => !user.trianglePosition || user.trianglePosition.length === 0);
+      } else {
+        // Filter users with specific position
+        nonDeletedUsers = nonDeletedUsers.filter(user => 
+          user.trianglePosition && 
+          user.trianglePosition.length > 0 && 
+          user.trianglePosition[0].positionKey === parseInt(position)
+        );
+      }
+    }
     
     // Transform data for frontend
     const formattedUsers = nonDeletedUsers.map(user => {

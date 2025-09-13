@@ -9,7 +9,7 @@ interface User {
   username: string
   walletAddress: string
   plan: string
-  trianglePosition?: number
+  trianglePosition?: number | string | null
   triangleId?: string
   referralCode: string
   balance: number
@@ -25,37 +25,47 @@ const ChessAdminUsers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterPlan, setFilterPlan] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [filterPosition, setFilterPosition] = useState('all') // Add position filter state
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showUserModal, setShowUserModal] = useState(false)
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]) // For bulk selection
   const [isSelecting, setIsSelecting] = useState(false) // Toggle bulk selection mode
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const response = await fetch('/api/admin/users')
-        if (response.ok) {
-          const data = await response.json()
-          // Fix: API returns array directly, not { users: [...] }
-          setUsers(Array.isArray(data) ? data : [])
-        } else {
-          const errorData = await response.json()
-          setError(errorData.error || 'Failed to fetch users')
-          setUsers([])
-        }
-      } catch (error: any) {
-        console.error('Failed to fetch users:', error)
-        setError('Network error while fetching users')
+  // Add a function to fetch users with filters
+  const fetchUsersWithFilters = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      // Build query parameters
+      const params = new URLSearchParams()
+      if (searchTerm) params.append('search', searchTerm)
+      if (filterPlan && filterPlan !== 'all') params.append('plan', filterPlan)
+      if (filterStatus && filterStatus !== 'all') params.append('status', filterStatus)
+      if (filterPosition && filterPosition !== 'all') params.append('position', filterPosition)
+      
+      const response = await fetch(`/api/admin/users?${params.toString()}`)
+      if (response.ok) {
+        const data = await response.json()
+        setUsers(Array.isArray(data) ? data : [])
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Failed to fetch users')
         setUsers([])
-      } finally {
-        setLoading(false)
       }
+    } catch (error: any) {
+      console.error('Failed to fetch users:', error)
+      setError('Network error while fetching users')
+      setUsers([])
+    } finally {
+      setLoading(false)
     }
+  }
 
-    fetchUsers()
-  }, [])
+  // Update the useEffect to use filters
+  useEffect(() => {
+    fetchUsersWithFilters()
+  }, [searchTerm, filterPlan, filterStatus, filterPosition])
 
   const getPlanPiece = (plan: string) => {
     switch (plan) {
@@ -160,6 +170,8 @@ const ChessAdminUsers: React.FC = () => {
         setSelectedUsers([]) // Clear selection
         setIsSelecting(false) // Exit selection mode
         alert(`Successfully deleted ${selectedUsers.length} user(s)`)
+        // Refresh the user list
+        fetchUsersWithFilters()
       } else {
         const errorData = await response.json()
         alert(`Failed to delete users: ${errorData.error}`)
@@ -236,7 +248,7 @@ const ChessAdminUsers: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
@@ -269,6 +281,30 @@ const ChessAdminUsers: React.FC = () => {
                 <option value="active">Active</option>
                 <option value="pending">Pending</option>
                 <option value="suspended">Suspended</option>
+              </select>
+              
+              <select
+                value={filterPosition}
+                onChange={(e) => setFilterPosition(e.target.value)}
+                className="royal-input w-full"
+              >
+                <option value="all">All Positions</option>
+                <option value="no-position">No Position</option>
+                <option value="1">Position 1</option>
+                <option value="2">Position 2</option>
+                <option value="3">Position 3</option>
+                <option value="4">Position 4</option>
+                <option value="5">Position 5</option>
+                <option value="6">Position 6</option>
+                <option value="7">Position 7</option>
+                <option value="8">Position 8</option>
+                <option value="9">Position 9</option>
+                <option value="10">Position 10</option>
+                <option value="11">Position 11</option>
+                <option value="12">Position 12</option>
+                <option value="13">Position 13</option>
+                <option value="14">Position 14</option>
+                <option value="15">Position 15</option>
               </select>
               
               {/* Bulk Actions */}
