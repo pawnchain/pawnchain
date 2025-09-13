@@ -187,6 +187,8 @@ export async function PATCH(
           plan: user.plan
         }
         
+        console.log('Storing rejoin data:', rejoinData); // Debug log
+        
         // We'll store this data in the transaction metadata so the frontend can access it
         await prisma.transaction.update({
           where: { id: transaction.id },

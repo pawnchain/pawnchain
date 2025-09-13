@@ -68,6 +68,7 @@ const ChessJoinTriangleModal: React.FC<ChessJoinTriangleModalProps> = ({
       const response = await fetch(`/api/auth/referrer?code=${encodeURIComponent(referrerCode)}`)
       if (response.ok) {
         const data = await response.json()
+        console.log('Referrer data received:', data); // Debug log
         setReferrerInfo(data)
         setShowReferrerInfo(true)
         
@@ -80,6 +81,7 @@ const ChessJoinTriangleModal: React.FC<ChessJoinTriangleModalProps> = ({
         setShowReferrerInfo(false)
       }
     } catch (err) {
+      console.error('Error validating referrer:', err); // Debug log
       setReferrerInfo(null)
       setShowReferrerInfo(false)
     }

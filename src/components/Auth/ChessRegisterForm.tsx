@@ -36,6 +36,7 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
     if (rejoinData) {
       try {
         const userData = JSON.parse(rejoinData)
+        console.log('Rejoin data found:', userData) // Debug log
         setIsRejoiningUser(true)
         // Prefill the form with user data
         setFormData(prev => ({
@@ -67,19 +68,22 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
         
         if (response.ok) {
           const data = await response.json()
-          setReferrerInfo(data.referrer)
+          console.log('Referrer data for registration:', data); // Debug log
+          setReferrerInfo(data)
           setIsReferralCodeLocked(true)
           
-          const referrerPlan = data.referrer.planType.charAt(0).toUpperCase() + data.referrer.planType.slice(1).toLowerCase()
-          setFormData(prev => ({ ...prev, plan: referrerPlan as PlanType, referralCode: code }))
-          
-          addNotification({
-            userId: 'system',
-            title: 'Noble Sponsor Found',
-            message: `You shall join ${data.referrer.username}'s ${referrerPlan} battalion`,
-            type: 'info',
-            read: false,
-          })
+          // The API returns the plan directly, not nested in referrer object
+          if (data.plan) {
+            setFormData(prev => ({ ...prev, plan: data.plan, referralCode: code }))
+            
+            addNotification({
+              userId: 'system',
+              title: 'Noble Sponsor Found',
+              message: `You shall join ${data.username}'s ${data.plan} battalion`,
+              type: 'info',
+              read: false,
+            })
+          }
         } else {
           setReferrerInfo(null)
           setIsReferralCodeLocked(false)
@@ -138,7 +142,8 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
     e.preventDefault()
     setIsLoading(true)
 
-    if (formData.password !== formData.confirmPassword) {
+    // Only validate passwords for new registrations, not rejoining users
+    if (!isRejoiningUser && formData.password !== formData.confirmPassword) {
       addNotification({
         userId: 'system',
         title: 'Oath Mismatch',
@@ -167,9 +172,12 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
     }
 
     try {
+      // Use a placeholder password for rejoining users since they don't need to enter one
+      const passwordToUse = isRejoiningUser ? 'rejoin-placeholder-password' : formData.password;
+      
       const { success, deposit } = await register(
         formData.username,
-        formData.password,
+        passwordToUse,
         formData.walletAddress,
         formData.plan,
         formData.referralCode
@@ -331,7 +339,7 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
                 Treasury Key (Wallet Address)
               </label>
               <div className="relative">
-                <Wallet className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Wallet className="absolute left-33 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <input
                   type="text"
                   value={formData.walletAddress}
@@ -343,61 +351,63 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
               </div>
             </motion.div>
 
-            {/* Password Fields - Always show for new registration */}
-            <>
-              {/* Password */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
-              >
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Secret Passphrase
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full pl-12 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-white placeholder-gray-400 transition-all"
-                    placeholder="Create your secret passphrase"
-                    required
-                  />
-                  <motion.button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </motion.button>
-                </div>
-              </motion.div>
+            {/* Password Fields - Only show for new registration, not for rejoining users */}
+            {!isRejoiningUser && (
+              <>
+                {/* Password */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Secret Passphrase
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full pl-12 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-white placeholder-gray-400 transition-all"
+                      placeholder="Create your secret passphrase"
+                      required
+                    />
+                    <motion.button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </motion.button>
+                  </div>
+                </motion.div>
 
-              {/* Confirm Password */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 }}
-              >
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Confirm Secret Passphrase
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className="w-full pl-12 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-white placeholder-gray-400 transition-all"
-                    placeholder="Confirm your secret passphrase"
-                    required
-                  />
-                </div>
-              </motion.div>
-            </>
+                {/* Confirm Password */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Confirm Secret Passphrase
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      className="w-full pl-12 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-white placeholder-gray-400 transition-all"
+                      placeholder="Confirm your secret passphrase"
+                      required
+                    />
+                  </div>
+                </motion.div>
+              </>
+            )}
 
             {/* Plan Selection */}
             <motion.div

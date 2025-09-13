@@ -72,6 +72,7 @@ export async function GET(
             const metadata = transaction.metadata as any;
             if (metadata.rejoinData) {
               response.rejoinData = metadata.rejoinData;
+              console.log('Rejoin data included in response:', metadata.rejoinData); // Debug log
             }
           }
         } catch (e) {

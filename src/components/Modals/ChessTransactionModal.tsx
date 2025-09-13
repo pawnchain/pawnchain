@@ -104,7 +104,13 @@ const ChessTransactionModal: React.FC<ChessTransactionModalProps> = ({
       // For completed withdrawals, store rejoin data and redirect to register page for new account
       if (status.rejoinData) {
         try {
-          localStorage.setItem('rejoin_user_data', JSON.stringify(status.rejoinData))
+          // Ensure the data structure matches what ChessRegisterForm expects
+          const rejoinData = {
+            username: status.rejoinData.username || '',
+            walletAddress: status.rejoinData.walletAddress || '',
+            plan: status.rejoinData.plan || 'King'
+          };
+          localStorage.setItem('rejoin_user_data', JSON.stringify(rejoinData))
         } catch (e) {
           console.error('Error storing rejoin data:', e)
         }
