@@ -175,7 +175,7 @@ const ChessJoinTriangleModal: React.FC<ChessJoinTriangleModalProps> = ({
               Join New Battle Formation
             </h2>
             <p className="text-gray-300">
-              Begin your next conquest in the ForgeChain kingdom
+              Begin your next conquest in the PawnChain kingdom
             </p>
           </div>
 

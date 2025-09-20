@@ -246,7 +246,7 @@ const ChessDashboard: React.FC<ChessDashboardProps> = ({ onNavigate }) => {
               </div>
               <p className="text-gray-300 mb-4">
                 Congratulations on your successful withdrawal! You can now join a new triangle formation 
-                and continue your journey in the ForgeChain kingdom.
+                and continue your journey in the PawnChain kingdom.
               </p>
               <motion.button
                 onClick={() => setShowJoinTriangleModal(true)}

@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate a unique email if not provided
-    const email = `${username}@forgechain.local`
+    const email = `${username}@pawnchain.local`
     
     // Create user
     const newUser = await prisma.user.create({

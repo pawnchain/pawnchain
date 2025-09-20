@@ -38,13 +38,13 @@ const ChessReferralModal: React.FC<ChessReferralModalProps> = ({ referralCode, o
   }
 
   const handleShare = async () => {
-    const shareText = `Join me in the ForgeChain Kingdom! Use my royal referral code: ${referralCode}`
+    const shareText = `Join me in the PawnChain Kingdom! Use my royal referral code: ${referralCode}`
     const shareUrl = `${window.location.origin}/register?ref=${referralCode}`
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Join ForgeChain Kingdom',
+          title: 'Join PawnChain Kingdom',
           text: shareText,
           url: shareUrl,
         })

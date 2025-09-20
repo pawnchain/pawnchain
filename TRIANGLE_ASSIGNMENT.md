@@ -1,6 +1,6 @@
 # Triangle Assignment Logic
 
-This document explains the implementation of the triangle assignment logic in ForgeChain Networks.
+This document explains the implementation of the triangle assignment logic in PawnChain Networks.
 
 ## Overview
 

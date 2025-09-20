@@ -288,7 +288,7 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
             </h1>
             <p className="text-gray-400">
               {isRejoiningUser 
-                ? 'Continue your conquest in the ForgeChain kingdom' 
+                ? 'Continue your conquest in the PawnChain kingdom' 
                 : 'Embark on your journey to financial sovereignty'}
             </p>
             

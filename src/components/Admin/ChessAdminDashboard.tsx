@@ -151,7 +151,7 @@ const ChessAdminDashboard: React.FC = () => {
               Royal Council Chamber
             </h1>
             <p className="text-xl text-gray-300">
-              Command center for the ForgeChain Kingdom
+              Command center for the PawnChain Kingdom
             </p>
           </motion.div>
 

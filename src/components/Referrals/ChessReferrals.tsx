@@ -160,13 +160,13 @@ const ChessReferrals: React.FC = () => {
   }
 
   const handleShare = async () => {
-    const shareText = `Join me in the ForgeChain Royal Kingdom! Use my noble recruitment code: ${referralData.code}`
+    const shareText = `Join me in the PawnChain Royal Kingdom! Use my noble recruitment code: ${referralData.code}`
     const shareUrl = `${window.location.origin}/register?ref=${referralData.code}`
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Join the ForgeChain Royal Kingdom',
+          title: 'Join the PawnChain Royal Kingdom',
           text: shareText,
           url: shareUrl,
         })

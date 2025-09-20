@@ -65,7 +65,7 @@ const ChessHeader: React.FC<ChessHeaderProps> = ({ onNavigate, currentPage }) =>
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-600 opacity-20 blur-lg"></div>
             </div>
             <div>
-              <h1 className="text-2xl font-bold gradient-text">ForgeChain</h1>
+              <h1 className="text-2xl font-bold gradient-text">PawnChain</h1>
               <p className="text-xs text-gray-400 uppercase tracking-wider">Networks</p>
             </div>
           </motion.div>

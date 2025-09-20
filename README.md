@@ -1,10 +1,10 @@
-# ForgeChain Networks
+# PawnChain Networks
 
 A peer-to-peer triangular pyramid investment system designed to manage user referrals, investments, and payouts through a structured 15-position hierarchical tree.
 
 ## Project Overview
 
-ForgeChain Networks enables users to earn referral bonuses and receive payouts upon triangle completion. The system features:
+PawnChain Networks enables users to earn referral bonuses and receive payouts upon triangle completion. The system features:
 
 - Structured referral tracking with multi-format support (ObjectId, username, short code)
 - Secure and auditable transaction lifecycle with real-time status updates
@@ -63,7 +63,7 @@ For a detailed history of changes, please see [CHANGELOG.md](CHANGELOG.md).
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd forgechain
+cd PawnChain
 
 # Install dependencies
 npm install

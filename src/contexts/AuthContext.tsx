@@ -94,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsAdmin(true)
           console.log('Admin user detected from login response')
         }
-        localStorage.setItem('forgechain_user', JSON.stringify(data.user))
+        localStorage.setItem('PawnChain_user', JSON.stringify(data.user))
         return true
       }
       
@@ -114,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log('Admin user detected, setting isAdmin to true')
         }
         // Store user info in localStorage for persistence
-        localStorage.setItem('forgechain_user', JSON.stringify(session.user))
+        localStorage.setItem('PawnChain_user', JSON.stringify(session.user))
         return true
       } else {
         console.log('No user in first session check, retrying...')
@@ -131,7 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setIsAdmin(true)
             console.log('Admin user detected on retry, setting isAdmin to true')
           }
-          localStorage.setItem('forgechain_user', JSON.stringify(retrySession.user))
+          localStorage.setItem('PawnChain_user', JSON.stringify(retrySession.user))
           return true
         }
         
@@ -201,7 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const session = await sessionResponse.json()
       if (session.user?.isAdmin) {
         setIsAdmin(true)
-        localStorage.setItem('forgechain_admin', 'true')
+        localStorage.setItem('PawnChain_admin', 'true')
         return true
       }
 
@@ -230,8 +230,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setUser(null)
       setIsAdmin(false)
-      localStorage.removeItem('forgechain_user')
-      localStorage.removeItem('forgechain_admin')
+      localStorage.removeItem('PawnChain_user')
+      localStorage.removeItem('PawnChain_admin')
       localStorage.removeItem('pending_deposit')
     }
   }

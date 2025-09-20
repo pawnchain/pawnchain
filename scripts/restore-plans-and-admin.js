@@ -5,7 +5,7 @@ const prisma = new PrismaClient()
 
 async function restoreDatabase() {
   try {
-    console.log('🚀 Starting ForgeChain Networks database restoration...')
+    console.log('🚀 Starting PawnChain Networks database restoration...')
 
     // Initialize default plans
     console.log('📋 Creating investment plans...')
@@ -92,7 +92,7 @@ async function restoreDatabase() {
     console.log('👑 Creating admin user...')
     const adminUsername = process.env.ADMIN_USERNAME || 'admin'
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin123'
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@forgechain.com'
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@PawnChain.com'
 
     const existingAdmin = await prisma.user.findFirst({
       where: { isAdmin: true }
@@ -134,7 +134,7 @@ async function restoreDatabase() {
     console.log(`   • Settings: ${settings.length} system settings configured`)
     console.log(`   • Admin: Ready for management operations`)
     console.log('')
-    console.log('🚀 ForgeChain Networks is ready to launch!')
+    console.log('🚀 PawnChain Networks is ready to launch!')
 
   } catch (error) {
     console.error('❌ Error during database restoration:', error)

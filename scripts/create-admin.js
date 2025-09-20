@@ -18,7 +18,7 @@ async function createAdmin() {
     // Get admin credentials from environment variables
     const username = process.env.ADMIN_USERNAME || 'admin'
     const password = process.env.ADMIN_PASSWORD || 'admin123'
-    const email = process.env.ADMIN_EMAIL || 'admin@forgechain.com'
+    const email = process.env.ADMIN_EMAIL || 'admin@PawnChain.com'
     const walletAddress = '0x0000000000000000000000000000000000000000' // Default wallet address for admin
 
     // Hash the password
@@ -138,7 +138,7 @@ async function initializeSettings() {
 }
 
 async function main() {
-  console.log('Initializing ForgeChain Networks database...')
+  console.log('Initializing PawnChain Networks database...')
   
   await initializePlans()
   await initializeSettings()
