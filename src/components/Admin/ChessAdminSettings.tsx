@@ -9,7 +9,7 @@ const ChessAdminSettings: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [config, setConfig] = useState({
-    depositWallet: '',
+    depositWallet: process.env.CRYPTO_WALLET_ADDRESS || '',
     depositCoin: 'USDT',
     depositNetwork: 'TRON (TRC20)',
     MAINTENANCE_MODE: false,
