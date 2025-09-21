@@ -42,10 +42,29 @@ export async function GET(request: NextRequest) {
         referralBonus: true
       }
     })
-    
+
+       // Use hardcoded wallet address if available
+
     const config = {
-      plans
+      plans,
+      depositWallet: process.env.CRYPTO_WALLET_ADDRESS || undefined,
+      depositCoin: 'USDT',
+      depositNetwork: 'TRON (TRC20)'
     }
+    
+    // Get admin settings from database
+    const adminSettings = await prisma.adminSettings.findMany()
+    
+    // Merge database settings with config, but don't override hardcoded wallet
+    adminSettings.forEach(setting => {
+      if (setting.key !== 'depositWallet' || !process.env.CRYPTO_WALLET_ADDRESS) {
+        try {
+          config[setting.key] = JSON.parse(setting.value)
+        } catch {
+          config[setting.key] = setting.value
+        }
+      }
+    })
     
     return NextResponse.json(config)
   } catch (error) {
@@ -74,6 +93,10 @@ export async function POST(request: NextRequest) {
     
     // Update admin settings
     for (const [key, value] of Object.entries(body)) {
+      // Skip depositWallet if we're using a hardcoded address
+      if (key === 'depositWallet' && process.env.CRYPTO_WALLET_ADDRESS) {
+        continue;
+      }
       await prisma.adminSettings.upsert({
         where: { key },
         update: { value: String(value) },
