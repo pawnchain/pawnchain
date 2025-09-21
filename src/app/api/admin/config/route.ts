@@ -44,12 +44,15 @@ export async function GET(request: NextRequest) {
     })
 
        // Use hardcoded wallet address if available
-
-    const config = {
+    const config: any = {
       plans,
-      depositWallet: process.env.CRYPTO_WALLET_ADDRESS || undefined,
       depositCoin: 'USDT',
       depositNetwork: 'TRON (TRC20)'
+    }
+    
+    // Add depositWallet only if not using hardcoded value
+    if (!process.env.CRYPTO_WALLET_ADDRESS) {
+      config.depositWallet = undefined;
     }
     
     // Get admin settings from database
@@ -57,14 +60,22 @@ export async function GET(request: NextRequest) {
     
     // Merge database settings with config, but don't override hardcoded wallet
     adminSettings.forEach(setting => {
-      if (setting.key !== 'depositWallet' || !process.env.CRYPTO_WALLET_ADDRESS) {
-        try {
-          config[setting.key] = JSON.parse(setting.value)
-        } catch {
-          config[setting.key] = setting.value
-        }
+      // Skip depositWallet if we're using a hardcoded address
+      if (setting.key === 'depositWallet' && process.env.CRYPTO_WALLET_ADDRESS) {
+        return;
+      }
+      
+      try {
+        config[setting.key] = JSON.parse(setting.value)
+      } catch {
+        config[setting.key] = setting.value
       }
     })
+    
+    // If using hardcoded wallet address, set it in the response
+    if (process.env.CRYPTO_WALLET_ADDRESS) {
+      config.depositWallet = process.env.CRYPTO_WALLET_ADDRESS;
+    }
     
     return NextResponse.json(config)
   } catch (error) {
