@@ -26,8 +26,12 @@ const ChessAdminSettings: React.FC = () => {
     try {
       const res = await fetch('/api/admin/config')
       if (!res.ok) throw new Error('Failed to load settings')
-      const data = await res.json()
-      setConfig(prev => ({ ...prev, ...data }))
+      const data: any = await res.json()
+      setConfig(prev => ({ 
+        ...prev, 
+        ...data,
+        depositWallet: process.env.CRYPTO_WALLET_ADDRESS || data.depositWallet || ''
+      }))
     } catch (err: any) {
       setError(err.message || 'Failed to load settings')
     } finally {
@@ -40,10 +44,20 @@ const ChessAdminSettings: React.FC = () => {
     setError(null)
     setSuccess(null)
     try {
+      // If using hardcoded wallet address, don't save it to the database
+      const configToSave: any = {
+        ...config
+      };
+      
+      // Remove depositWallet if we're using a hardcoded address
+      if (process.env.CRYPTO_WALLET_ADDRESS) {
+        delete configToSave.depositWallet;
+      }
+      
       const res = await fetch('/api/admin/config', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(config),
+        body: JSON.stringify(configToSave),
       })
       if (!res.ok) throw new Error('Failed to save settings')
       setSuccess('Settings saved successfully')
