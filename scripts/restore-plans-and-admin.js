@@ -26,9 +26,9 @@ async function restoreDatabase() {
       },
       {
         name: 'Bishop',
-        price: 25,
-        payout: 100,
-        referralBonus: 2.5,
+        price: 20,
+        payout: 80,
+        referralBonus: 2,
         description: 'Mid-tier investment plan with good returns'
       },
       {
