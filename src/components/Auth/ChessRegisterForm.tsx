@@ -103,7 +103,7 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
   const plans = [
     { 
       name: 'King' as PlanType, 
-      price: 1.0, 
+      price: 100, 
       icon: Crown, 
       piece: '♔',
       color: 'from-yellow-500 to-yellow-600',
@@ -112,30 +112,30 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
     },
     { 
       name: 'Queen' as PlanType, 
-      price: 0.5, 
+      price: 50, 
       icon: Shield, 
       piece: '♕',
       color: 'from-purple-500 to-purple-600',
       description: 'Powerful royal consort',
-      benefits: ['3x Payout Multiplier', 'Noble Treasury', 'Royal Court Access']
+      benefits: ['4x Payout Multiplier', 'Noble Treasury', 'Royal Court Access']
     },
     { 
       name: 'Bishop' as PlanType, 
-      price: 0.25, 
+      price: 25, 
       icon: Sword, 
       piece: '♗',
       color: 'from-green-500 to-green-600',
       description: 'Wise spiritual advisor',
-      benefits: ['2x Payout Multiplier', 'Sacred Treasury', 'Divine Guidance']
+      benefits: ['4x Payout Multiplier', 'Sacred Treasury', 'Divine Guidance']
     },
     { 
       name: 'Knight' as PlanType, 
-      price: 0.1, 
+      price: 10, 
       icon: Castle, 
       piece: '♘',
       color: 'from-blue-500 to-blue-600',
       description: 'Brave warrior of the realm',
-      benefits: ['1.5x Payout Multiplier', 'Warrior Treasury', 'Battle Honor']
+      benefits: ['4x Payout Multiplier', 'Warrior Treasury', 'Battle Honor']
     },
   ]
 
