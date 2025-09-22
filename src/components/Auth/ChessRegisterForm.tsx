@@ -121,7 +121,7 @@ const ChessRegisterForm: React.FC<ChessRegisterFormProps> = ({ onNavigate }) => 
     },
     { 
       name: 'Bishop' as PlanType, 
-      price: 25, 
+      price: 20, 
       icon: Sword, 
       piece: '♗',
       color: 'from-green-500 to-green-600',
